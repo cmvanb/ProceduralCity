@@ -1,20 +1,46 @@
 using UnityEngine;
+using CUnity.Common.Math;
 
-namespace CUnityProceduralCity
+namespace CUnity.ProceduralCity.Generation
 {
     public class RoadSegment
     {
-        public Vector2 PointA { get; private set; }
-        public Vector2 PointB { get; private set; }
-        public int Level { get; private set; }
-
-        public RoadSegment(Vector2 pointA, Vector2 pointB, int level)
+        public Vector2 PointA
         {
-            this.PointA = pointA;
-            this.PointB = pointB;
+            get
+            {
+                return this.LineSegment2D.PointA;
+            }
+        }
+
+        public Vector2 PointB
+        {
+            get
+            {
+                return this.LineSegment2D.PointB;
+            }
+        }
+
+        public int Level { get; private set; }
+        public LineSegment2D LineSegment2D { get; private set; }
+
+        public RoadSegment(LineSegment2D segment, int level)
+        {
+            this.LineSegment2D = segment;
+
             this.Level = level;
         }
 
+        public RoadSegment(Vector2 pointA, Vector2 pointB, int level)
+        {
+            this.LineSegment2D = new LineSegment2D(pointA, pointB);
+
+            //this.PointA = pointA;
+            //this.PointB = pointB;
+            this.Level = level;
+        }
+
+        // TODO: Refactor this method to LineSegment2D. -Casper 2017-08-09
         public bool IsEqual(RoadSegment segment)
         {
             // NOTE: Should we perhaps be testing for approximate equality? For Unity.Vector2, that
@@ -33,6 +59,7 @@ namespace CUnityProceduralCity
             return false;
         }
 
+        // TODO: Refactor this method to LineSegment2D. -Casper 2017-08-09
         public float CalculateLength()
         {
             return Vector2.Distance(this.PointA, this.PointB);

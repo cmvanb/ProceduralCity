@@ -1,16 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
-public class Example01UI : MonoBehaviour {
-
-	// Use this for initialization
-	void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
+namespace CUnity.ProceduralCity.Example01
+{
+    public class Example01UI : MonoBehaviour
+    {
+        // TODO: Implement.
+    }
 }

@@ -25,7 +25,7 @@ namespace CUnity.Common.Math
                             1: Intersection at unique point 'intersectPoint'.
                             2: Overlapping segments from 'intersectPoint' to 'intersectEndpoint'.
         ----------------------------------------------------------------------------------------- */
-        public static int Intersection(
+        public static int CheckIntersection(
             LineSegment2D segmentA,
             LineSegment2D segmentB,
             out Vector2 i0,

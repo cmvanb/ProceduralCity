@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
+using CUnity.Common.Math;
 
-namespace CUnityProceduralCity
+namespace CUnity.ProceduralCity.Generation
 {
     public class RoadIntersection
     {
@@ -439,22 +440,32 @@ namespace CUnityProceduralCity
                 {
                     continue;
                 }
-                else if (Vector2.Distance(seg.PointA, segment.PointA) < 0.01f
+
+                if (Vector2.Distance(seg.PointA, segment.PointA) < 0.01f
                     || Vector2.Distance(seg.PointB, segment.PointB) < 0.01f)
                 {
                     continue;
                 }
-                else if (Vector2.Distance(seg.PointA, segment.PointB) < 0.01f
+
+                if (Vector2.Distance(seg.PointA, segment.PointB) < 0.01f
                     || Vector2.Distance(seg.PointB, segment.PointA) < 0.01f)
                 {
                     continue;
                 }
-                else if (inter2Segments(segment, seg, out interTmp, out tmp) != 0)
+
+                int intersectionCheck = LineSegment2D.CheckIntersection(
+                    segment.LineSegment2D,
+                    seg.LineSegment2D,
+                    out interTmp,
+                    out tmp);
+
+                if (intersectionCheck != 0)
                 {
                     other = seg;
                     intersection = new Vector2(interTmp.x, interTmp.y);
                     count++;
                 }
+                //else if (inter2Segments(segment, seg, out interTmp, out tmp) != 0)
             }
 
             return count;

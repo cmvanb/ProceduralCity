@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace CUnityProceduralCity
+namespace CUnity.ProceduralCity.Generation
 {
     public enum CenterShape
     {

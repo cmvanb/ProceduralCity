@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace CUnityProceduralCity
+namespace CUnity.ProceduralCity.Generation
 {
     public class CityGeneratorService
     {
