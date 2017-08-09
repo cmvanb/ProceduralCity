@@ -4,17 +4,6 @@ using CUnity.Common.Math;
 
 namespace CUnity.ProceduralCity.Generation
 {
-    // TODO: See if you can refactor this class into a simple List<Vector2>. -Casper 2017-08-09
-    public class RoadIntersection
-    {
-        public List<Vector2> Points { get; private set; }
-
-        public RoadIntersection(List<Vector2> points)
-        {
-            this.Points = points;
-        }
-    }
-
     // TODO: Consider adding safeguards/defensive programming to ensure this class is used properly. -Casper 2017-08-09
     public class RoadsModel
     {
