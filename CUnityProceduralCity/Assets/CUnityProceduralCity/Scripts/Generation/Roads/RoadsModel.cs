@@ -3,20 +3,6 @@ using UnityEngine;
 
 namespace CUnityProceduralCity
 {
-    public class RoadSegment
-    {
-        public Vector2 PointA { get; private set; }
-        public Vector2 PointB { get; private set; }
-        public int Level { get; private set; }
-
-        public RoadSegment(Vector2 pointA, Vector2 pointB, int level)
-        {
-            this.PointA = pointA;
-            this.PointB = pointB;
-            this.Level = level;
-        }
-    }
-
     public class RoadIntersection
     {
         public List<Vector2> Points { get; private set; }
@@ -133,8 +119,8 @@ namespace CUnityProceduralCity
             float splitRatio = Random.Range(0.33f, 0.66f);
 
             // get split distance
-            Vector3 p1 = new Vector3(segment.PointA.point.x, 0, segment.PointA.point.y);
-            Vector3 p2 = new Vector3(segment.PointB.point.x, 0, segment.PointB.point.y);
+            Vector3 p1 = new Vector3(segment.PointA.x, 0, segment.PointA.y);
+            Vector3 p2 = new Vector3(segment.PointB.x, 0, segment.PointB.y);
             float length = Vector3.Distance(p1, p2);
             length *= splitRatio;
 
@@ -147,20 +133,20 @@ namespace CUnityProceduralCity
             // calaculate other new point
             Vector3 per = Vector3.Cross(p1 - p2, Vector3.down).normalized;
 
-            float newLength = this.scale / ((segment.Level + 1) * Random.Range(1f, 2f));
+            float newLength = this.Scale / ((segment.Level + 1) * Random.Range(1f, 2f));
             Vector3 newPointEnd = newPoint + (per * newLength);
 
             // add new segment
             RoadSegment newSegment = new RoadSegment(
-                new RoadPoint(new Vector2(newPoint.x, newPoint.z), null),
-                new RoadPoint(new Vector2(newPointEnd.x, newPointEnd.z), null), segment.Level + 1);
+                new Vector2(newPoint.x, newPoint.z),
+                new Vector2(newPointEnd.x, newPointEnd.z), segment.Level + 1);
 
-            // calaculate other new point
+            // calculate other new point
             Vector3 perA = Vector3.Cross(p1 - p2, Vector3.down).normalized * -1;
             Vector3 newPointEndOther = newPoint + (perA * newLength);
             RoadSegment newSegmentOther = new RoadSegment(
-                new RoadPoint(new Vector2(newPoint.x, newPoint.z), null),
-                new RoadPoint(new Vector2(newPointEndOther.x, newPointEndOther.z), null), segment.Level + 1);
+                new Vector2(newPoint.x, newPoint.z),
+                new Vector2(newPointEndOther.x, newPointEndOther.z), segment.Level + 1);
 
             // check what segments to add and add them
             bool seg1 = false;
@@ -171,10 +157,10 @@ namespace CUnityProceduralCity
 
             if (!with1)
             {
-                Vector2 intersection = Vector3.zero;
+                Vector2 intersectionPoint = Vector3.zero;
                 RoadSegment other = null;
 
-                int iCount = segmentIntersection(newSegment, out intersection, out other, segment);
+                int iCount = SegmentIntersection(newSegment, out intersectionPoint, out other, segment);
 
                 if (iCount <= 1)
                 {
@@ -185,16 +171,21 @@ namespace CUnityProceduralCity
 
                 if (iCount == 1)
                 {
-                    RoadSegment[] segmentsA = this.patchSegment(other, new RoadPoint(intersection, other));
-                    RoadSegment[] segmentsB = this.patchSegment(newSegment, new RoadPoint(intersection, newSegment));
+                    // NOTE: Before refactoring, this code associated intersectionPoint with the
+                    // other segment, for usage in RoadRenderer.cs. -Casper 2017-08-09
+                    RoadSegment[] segmentsA = this.PatchSegment(other, intersectionPoint);
 
-                    //kill very short dead-ends
-                    bool sa = segmentsA[0].SegmentLength() > shortCutoff;
-                    bool sb = segmentsA[1].SegmentLength() > shortCutoff;
-                    bool sc = segmentsB[0].SegmentLength() > shortCutoff;
-                    bool sd = segmentsB[1].SegmentLength() > shortCutoff;
+                    // NOTE: Before refactoring, this code associated intersectionPoint with the
+                    // newSegment segment, for usage in RoadRenderer.cs. -Casper 2017-08-09
+                    RoadSegment[] segmentsB = this.PatchSegment(newSegment, intersectionPoint);
 
-                    List<RoadPoint> points = new List<RoadPoint>();
+                    // kill very short dead-ends
+                    bool sa = segmentsA[0].CalculateLength() > shortCutoff;
+                    bool sb = segmentsA[1].CalculateLength() > shortCutoff;
+                    bool sc = segmentsB[0].CalculateLength() > shortCutoff;
+                    bool sd = segmentsB[1].CalculateLength() > shortCutoff;
+
+                    List<Vector2> points = new List<Vector2>();
 
                     if (sa)
                     {
@@ -232,18 +223,19 @@ namespace CUnityProceduralCity
                         this.Segments.RemoveAll(p => p.IsEqual(segmentsB[1]));
                     }
 
-                    Intersection inter = new Intersection(points);
-                    this.RoadIntersections.Add(inter);
+                    RoadIntersection inter = new RoadIntersection(points);
+
+                    this.Intersections.Add(inter);
                 }
             }
 
             //other side of intersection
             if (!with2)
             {
-                Vector2 intersection = Vector3.zero;
+                Vector2 intersectionPoint = Vector3.zero;
                 RoadSegment other = null;
 
-                int iCount = segmentIntersection(newSegmentOther, out intersection, out other, segment);
+                int iCount = SegmentIntersection(newSegmentOther, out intersectionPoint, out other, segment);
 
                 if (iCount <= 1)
                 {
@@ -254,16 +246,21 @@ namespace CUnityProceduralCity
 
                 if (iCount == 1)
                 {
-                    RoadSegment[] segmentsA = this.patchSegment(other, new RoadPoint(intersection, other));
-                    RoadSegment[] segmentsB = this.patchSegment(newSegmentOther, new RoadPoint(intersection, newSegmentOther));
+                    // NOTE: Before refactoring, this code associated intersectionPoint with the
+                    // other segment, for usage in RoadRenderer.cs. -Casper 2017-08-09
+                    RoadSegment[] segmentsA = this.PatchSegment(other, intersectionPoint);
+
+                    // NOTE: Before refactoring, this code associated intersectionPoint with the
+                    // newSegmentOther segment, for usage in RoadRenderer.cs. -Casper 2017-08-09
+                    RoadSegment[] segmentsB = this.PatchSegment(newSegmentOther, intersectionPoint);
 
                     //kill very short dead-ends
-                    bool sa = segmentsA[0].SegmentLength() > shortCutoff;
-                    bool sb = segmentsA[1].SegmentLength() > shortCutoff;
-                    bool sc = segmentsB[0].SegmentLength() > shortCutoff;
-                    bool sd = segmentsB[1].SegmentLength() > shortCutoff;
+                    bool sa = segmentsA[0].CalculateLength() > shortCutoff;
+                    bool sb = segmentsA[1].CalculateLength() > shortCutoff;
+                    bool sc = segmentsB[0].CalculateLength() > shortCutoff;
+                    bool sd = segmentsB[1].CalculateLength() > shortCutoff;
 
-                    List<RoadPoint> points = new List<RoadPoint>();
+                    List<Vector2> points = new List<Vector2>();
 
                     if (sa)
                     {
@@ -301,50 +298,180 @@ namespace CUnityProceduralCity
                         this.Segments.RemoveAll(p => p.IsEqual(segmentsB[1]));
                     }
 
-                    Intersection inter = new Intersection(points);
-                    this.RoadIntersections.Add(inter);
+                    RoadIntersection inter = new RoadIntersection(points);
+                    this.Intersections.Add(inter);
                 }
             }
 
             if (seg1 || seg2)
             {
-                RoadSegment[] segments = this.patchSegment(
+                // NOTE: Before refactoring, this code associated newPoint with the segment segment,
+                // for usage in RoadRenderer.cs. -Casper 2017-08-09
+                RoadSegment[] segments = this.PatchSegment(
                     segment,
-                    new RoadPoint(new Vector2(newPoint.x, newPoint.z),
-                    segment));
+                    new Vector2(newPoint.x, newPoint.z));
 
                 if (seg1 && seg2)
                 {
-                    Intersection inter = new Intersection(
-                        new List<RoadPoint>{
+                    RoadIntersection inter = new RoadIntersection(
+                        new List<Vector2>{
                             segments[0].PointB,
                             segments[1].PointB,
                             newSegment.PointA,
                             newSegmentOther.PointA });
 
-                    this.RoadIntersections.Add(inter);
+                    this.Intersections.Add(inter);
                 }
                 else if (seg1)
                 {
-                    Intersection inter = new Intersection(
-                        new List<RoadPoint>{
+                    RoadIntersection inter = new RoadIntersection(
+                        new List<Vector2>{
                             segments[0].PointB,
                             segments[1].PointB,
                             newSegment.PointA });
 
-                    this.RoadIntersections.Add(inter);
+                    this.Intersections.Add(inter);
                 }
                 else if (seg2)
                 {
-                    Intersection inter = new Intersection(
-                        new List<RoadPoint>{
+                    RoadIntersection inter = new RoadIntersection(
+                        new List<Vector2>{
                             segments[0].PointB,
                             segments[1].PointB,
                             newSegmentOther.PointA });
 
-                    this.RoadIntersections.Add(inter);
+                    this.Intersections.Add(inter);
                 }
             }
+        }
+
+        // TODO: Give function a better name. -Casper 2017-08-09
+        private bool SegmentWithin(RoadSegment segment, float max)
+        {
+            foreach (RoadSegment seg in this.Segments)
+            {
+                bool amax = DistPointSegment(seg.PointA, segment) < max;
+                bool bmax = DistPointSegment(seg.PointB, segment) < max;
+
+                bool amin = MinPointDistance(seg, segment, max / 1.0f);
+
+                if (amax || bmax || amin)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // TODO: Give function a better name. -Casper 2017-08-09
+        private float DistPointSegment(Vector2 P, RoadSegment S)
+        {
+            Vector2 v = S.PointB - S.PointA;
+            Vector2 w = P - S.PointA;
+
+            float c1 = Vector2.Dot(w, v);
+
+            if (c1 <= 0)
+            {
+                return Vector2.Distance(P, S.PointA);
+            }
+
+            float c2 = Vector2.Dot(v, v);
+
+            if (c2 <= c1)
+            {
+                return Vector2.Distance(P, S.PointB);
+            }
+
+            float b = c1 / c2;
+            Vector2 Pb = S.PointA + (v * b);
+
+            return Vector2.Distance(P, Pb);
+        }
+
+        // TODO: Give function a better name. -Casper 2017-08-09
+        private bool MinPointDistance(RoadSegment a, RoadSegment b, float min)
+        {
+            if (Vector2.Distance(a.PointA, b.PointA) < min)
+            {
+                return true;
+            }
+
+            if (Vector2.Distance(a.PointA, b.PointB) < min)
+            {
+                return true;
+            }
+
+            if (Vector2.Distance(a.PointB, b.PointA) < min)
+            {
+                return true;
+            }
+
+            if (Vector2.Distance(a.PointB, b.PointB) < min)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        // TODO: Give function a better name. -Casper 2017-08-09
+        private int SegmentIntersection(
+            RoadSegment segment,
+            out Vector2 intersection,
+            out RoadSegment other,
+            RoadSegment skip)
+        {
+            intersection = Vector2.zero;
+            other = null;
+
+            Vector2 tmp = Vector2.zero;
+            Vector2 interTmp = Vector3.zero;
+
+            int count = 0;
+
+            for (int i = 0; i < this.Segments.Count; i++)
+            {
+                RoadSegment seg = this.Segments[i];
+
+                if (seg.IsEqual(skip))
+                {
+                    continue;
+                }
+                else if (Vector2.Distance(seg.PointA, segment.PointA) < 0.01f
+                    || Vector2.Distance(seg.PointB, segment.PointB) < 0.01f)
+                {
+                    continue;
+                }
+                else if (Vector2.Distance(seg.PointA, segment.PointB) < 0.01f
+                    || Vector2.Distance(seg.PointB, segment.PointA) < 0.01f)
+                {
+                    continue;
+                }
+                else if (inter2Segments(segment, seg, out interTmp, out tmp) != 0)
+                {
+                    other = seg;
+                    intersection = new Vector2(interTmp.x, interTmp.y);
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        // TODO: Give function a better name. -Casper 2017-08-09
+        private RoadSegment[] PatchSegment(RoadSegment segment, Vector2 newPoint)
+        {
+            this.Segments.RemoveAll(p => p.IsEqual(segment));
+
+            RoadSegment left = new RoadSegment(segment.PointA, newPoint, segment.Level);
+            RoadSegment right = new RoadSegment(segment.PointB, newPoint, segment.Level);
+
+            this.Segments.Add(left);
+            this.Segments.Add(right);
+
+            return new RoadSegment[] { left, right };
         }
     }
 }
