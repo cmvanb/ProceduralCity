@@ -1,0 +1,3 @@
+[submodule "CUnityProceduralCity/Submodules/CUnityCommon"]
+	path = CUnityProceduralCity/Submodules/CUnityCommon
+	url = git@github.com:cmvanb/CUnityCommon.git
