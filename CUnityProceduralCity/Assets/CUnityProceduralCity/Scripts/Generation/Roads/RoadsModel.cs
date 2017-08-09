@@ -4,6 +4,7 @@ using CUnity.Common.Math;
 
 namespace CUnity.ProceduralCity.Generation
 {
+    // TODO: See if you can refactor this class into a simple List<Vector2>. -Casper 2017-08-09
     public class RoadIntersection
     {
         public List<Vector2> Points { get; private set; }
@@ -14,17 +15,29 @@ namespace CUnity.ProceduralCity.Generation
         }
     }
 
+    // TODO: Consider adding safeguards/defensive programming to ensure this class is used properly. -Casper 2017-08-09
     public class RoadsModel
     {
         public float Scale { get; private set; }
+        public float RoadWidth { get; private set; }
+        public float IntersectionOffset { get; private set; }
+
         public List<RoadSegment> Segments { get; private set; }
         public List<RoadIntersection> Intersections { get; private set; }
 
-        public RoadsModel(float scale)
+        public RoadsModel()
         {
-            this.Scale = scale;
             this.Segments = new List<RoadSegment>();
             this.Intersections = new List<RoadIntersection>();
+        }
+
+        public void SetScale(float scale)
+        {
+            this.Scale = scale;
+
+            // TODO: Consider making this configurable? Part of GeneratorRules? -Casper 2017-08-09
+            this.RoadWidth = scale * 1.0f;
+            this.IntersectionOffset = scale * 0.5f;
         }
 
         public void CreateCenter(CenterShape shape, Vector2 position, float angle)

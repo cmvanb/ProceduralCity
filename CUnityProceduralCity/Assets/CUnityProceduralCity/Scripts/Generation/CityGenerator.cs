@@ -4,7 +4,8 @@ namespace CUnity.ProceduralCity.Generation
 {
     public class CityGenerator : MonoBehaviour
     {
-        public GeneratorRules Rules = new GeneratorRules();
+        [SerializeField]
+        protected GeneratorRules Rules;
 
         public void Generate()
         {

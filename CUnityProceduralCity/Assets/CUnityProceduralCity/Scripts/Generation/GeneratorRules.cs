@@ -20,6 +20,8 @@ namespace CUnity.ProceduralCity.Generation
         public CenterShape CenterShape;
         public float CenterAngle;
         public float CityScale;
+        public float RoadWidth;
+        public float IntersectionOffset;
 
         public GeneratorRules(
             string cityName,
@@ -33,6 +35,9 @@ namespace CUnity.ProceduralCity.Generation
             this.CenterShape = centerShape;
             this.CenterAngle = centerAngle;
             this.CityScale = cityScale;
+
+            this.RoadWidth = cityScale;
+            this.IntersectionOffset = cityScale * 0.5f;
         }
     }
 }

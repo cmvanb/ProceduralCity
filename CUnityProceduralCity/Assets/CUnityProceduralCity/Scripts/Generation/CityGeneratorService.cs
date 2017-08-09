@@ -11,7 +11,9 @@ namespace CUnity.ProceduralCity.Generation
             cityObject.transform.position = rules.CenterPosition;
 
             // Generate roads model.
-            RoadsModel roadsModel = new RoadsModel(rules.CityScale);
+            RoadsModel roadsModel = new RoadsModel();
+
+            roadsModel.SetScale(rules.CityScale);
 
             roadsModel.CreateCenter(
                 rules.CenterShape,
@@ -26,20 +28,14 @@ namespace CUnity.ProceduralCity.Generation
             roadsModel.SplitSegments(3);
 
             // Generate roads view (a game object).
-            /*
-            this.roadRenderer = this.GetComponent<RoadRenderer>();
-            this.roadRenderer.ClearData();
+            GameObject roadsViewObject = new GameObject("RoadsView");
 
-            foreach (RoadSegment segment in this.network.RoadSegments)
-            {
-                this.roadRenderer.AddRoadSegments(segment);
-            }
+            roadsViewObject.transform.parent = cityObject.transform;
+            roadsViewObject.transform.localPosition = Vector3.zero;
 
-            foreach (Intersection inter in this.network.RoadIntersections)
-            {
-                this.roadRenderer.AddIntersection(inter);
-            }
-            */
+            RoadsView roadsView = roadsViewObject.AddComponent<RoadsView>();
+
+            roadsView.Initialize(roadsModel);
 
             // Populate city with building objects.
 
