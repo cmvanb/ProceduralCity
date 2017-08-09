@@ -34,9 +34,8 @@ namespace CUnity.ProceduralCity.Generation
             this.Scale = rules.CityScale;
             this.RoadTextureTiling = rules.RoadTextureTiling;
 
-            // TODO: Consider making these configurable? Part of GeneratorRules? -Casper 2017-08-09
-            this.RoadWidth = rules.CityScale * 1.0f;
-            this.IntersectionOffset = rules.CityScale * 0.5f;
+            this.RoadWidth = rules.RoadWidth * rules.CityScale;
+            this.IntersectionOffset = rules.IntersectionOffset * rules.CityScale;
         }
 
         public void CreateCenter(CenterShape shape, Vector2 position, float angle)

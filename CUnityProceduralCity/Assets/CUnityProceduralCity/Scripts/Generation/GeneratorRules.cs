@@ -10,7 +10,8 @@ namespace CUnity.ProceduralCity.Generation
         Y
     };
 
-    // TODO: Refactor this struct to a ScriptableObject for flexibility. -Casper 2017-08-01
+    // TODO: Refactor this struct to a ScriptableObject for flexibility (save it as a separate file
+    // instead of serializing directly to the scene). -Casper 2017-08-01
 
     [Serializable]
     public struct GeneratorRules
@@ -22,6 +23,8 @@ namespace CUnity.ProceduralCity.Generation
         public float CityScale;
         public float RoadTextureTiling;
         public Material RoadMaterial;
+        public float RoadWidth;
+        public float IntersectionOffset;
 
         public GeneratorRules(
             string cityName,
@@ -30,7 +33,9 @@ namespace CUnity.ProceduralCity.Generation
             float centerAngle,
             float cityScale,
             float roadTextureTiling,
-            Material roadMaterial)
+            Material roadMaterial,
+            float roadWidth,
+            float intersectionOffset)
         {
             this.CityName = cityName;
             this.CenterPosition = centerPosition;
@@ -39,6 +44,8 @@ namespace CUnity.ProceduralCity.Generation
             this.CityScale = cityScale;
             this.RoadTextureTiling = roadTextureTiling;
             this.RoadMaterial = roadMaterial;
+            this.RoadWidth = roadWidth;
+            this.IntersectionOffset = intersectionOffset;
         }
     }
 }

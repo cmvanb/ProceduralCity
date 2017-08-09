@@ -16,7 +16,8 @@ namespace CUnity.ProceduralCity.Generation
         {
             this.model = model;
 
-            Debug.Log(model);
+            // TODO: Implement override ToString() on RoadsModel. -Casper 2017-08-09
+            Debug.Log(model.ToString());
 
             this.meshFilter = this.gameObject.AddComponent<MeshFilter>();
             this.meshFilter.mesh = new Mesh();
