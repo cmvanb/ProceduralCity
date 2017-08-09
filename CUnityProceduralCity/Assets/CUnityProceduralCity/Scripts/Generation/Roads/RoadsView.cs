@@ -95,7 +95,7 @@ namespace CUnity.ProceduralCity.Generation
             normals.AddRange(new Vector3[]{ Vector3.up, Vector3.up, Vector3.up, Vector3.up });
 
             // add uvs
-            float length = Vector3.Distance(pointA, pointB) * this.Tiling;
+            float length = Vector3.Distance(pointA, pointB) * this.model.RoadTextureTiling;
 
             uvs.AddRange(new Vector2[] {
                 new Vector2(0, length),

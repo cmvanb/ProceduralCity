@@ -19,25 +19,24 @@ namespace CUnity.ProceduralCity.Generation
     public class RoadsModel
     {
         public float Scale { get; private set; }
+        public float RoadTextureTiling { get; private set; }
         public float RoadWidth { get; private set; }
         public float IntersectionOffset { get; private set; }
 
         public List<RoadSegment> Segments { get; private set; }
         public List<RoadIntersection> Intersections { get; private set; }
 
-        public RoadsModel()
+        public RoadsModel(GeneratorRules rules)
         {
             this.Segments = new List<RoadSegment>();
             this.Intersections = new List<RoadIntersection>();
-        }
 
-        public void SetScale(float scale)
-        {
-            this.Scale = scale;
+            this.Scale = rules.CityScale;
+            this.RoadTextureTiling = rules.RoadTextureTiling;
 
-            // TODO: Consider making this configurable? Part of GeneratorRules? -Casper 2017-08-09
-            this.RoadWidth = scale * 1.0f;
-            this.IntersectionOffset = scale * 0.5f;
+            // TODO: Consider making these configurable? Part of GeneratorRules? -Casper 2017-08-09
+            this.RoadWidth = rules.CityScale * 1.0f;
+            this.IntersectionOffset = rules.CityScale * 0.5f;
         }
 
         public void CreateCenter(CenterShape shape, Vector2 position, float angle)

@@ -6,14 +6,13 @@ namespace CUnity.ProceduralCity.Generation
     {
         public GameObject Generate(GeneratorRules rules)
         {
-            GameObject cityObject = new GameObject(rules.CityName);
+            // Generator city view (a game object).
+            GameObject cityViewObject = new GameObject(rules.CityName);
 
-            cityObject.transform.position = rules.CenterPosition;
+            cityViewObject.transform.position = rules.CenterPosition;
 
             // Generate roads model.
-            RoadsModel roadsModel = new RoadsModel();
-
-            roadsModel.SetScale(rules.CityScale);
+            RoadsModel roadsModel = new RoadsModel(rules);
 
             roadsModel.CreateCenter(
                 rules.CenterShape,
@@ -30,7 +29,7 @@ namespace CUnity.ProceduralCity.Generation
             // Generate roads view (a game object).
             GameObject roadsViewObject = new GameObject("RoadsView");
 
-            roadsViewObject.transform.parent = cityObject.transform;
+            roadsViewObject.transform.parent = cityViewObject.transform;
             roadsViewObject.transform.localPosition = Vector3.zero;
 
             RoadsView roadsView = roadsViewObject.AddComponent<RoadsView>();
@@ -39,7 +38,7 @@ namespace CUnity.ProceduralCity.Generation
 
             // Populate city with building objects.
 
-            return cityObject;
+            return cityViewObject;
         }
     }
 }
