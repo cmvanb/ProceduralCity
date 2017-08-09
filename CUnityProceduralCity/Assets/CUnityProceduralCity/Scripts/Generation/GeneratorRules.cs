@@ -21,6 +21,7 @@ namespace CUnity.ProceduralCity.Generation
         public float CenterAngle;
         public float CityScale;
         public float RoadTextureTiling;
+        public Material RoadMaterial;
 
         public GeneratorRules(
             string cityName,
@@ -28,7 +29,8 @@ namespace CUnity.ProceduralCity.Generation
             CenterShape centerShape,
             float centerAngle,
             float cityScale,
-            float roadTextureTiling)
+            float roadTextureTiling,
+            Material roadMaterial)
         {
             this.CityName = cityName;
             this.CenterPosition = centerPosition;
@@ -36,6 +38,7 @@ namespace CUnity.ProceduralCity.Generation
             this.CenterAngle = centerAngle;
             this.CityScale = cityScale;
             this.RoadTextureTiling = roadTextureTiling;
+            this.RoadMaterial = roadMaterial;
         }
     }
 }

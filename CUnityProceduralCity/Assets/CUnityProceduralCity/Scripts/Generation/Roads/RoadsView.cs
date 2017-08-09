@@ -9,9 +9,10 @@ namespace CUnity.ProceduralCity.Generation
         protected RoadsModel model;
 
         protected MeshFilter meshFilter;
+        protected MeshRenderer meshRenderer;
 
         // Public methods.
-        public void Initialize(RoadsModel model)
+        public void Initialize(RoadsModel model, Material roadMaterial)
         {
             this.model = model;
 
@@ -19,6 +20,9 @@ namespace CUnity.ProceduralCity.Generation
 
             this.meshFilter = this.gameObject.AddComponent<MeshFilter>();
             this.meshFilter.mesh = new Mesh();
+
+            this.meshRenderer = this.gameObject.AddComponent<MeshRenderer>();
+            this.meshRenderer.sharedMaterial = roadMaterial;
 
             foreach (RoadSegment segment in model.Segments)
             {
@@ -39,6 +43,8 @@ namespace CUnity.ProceduralCity.Generation
             // dereference model
 
             // destroy meshFilter
+
+            // destroy meshRenderer
         }
 
         // Local methods.
@@ -108,6 +114,5 @@ namespace CUnity.ProceduralCity.Generation
             mesh.uv = uvs.ToArray();
             mesh.RecalculateNormals();
         }
-
     }
 }

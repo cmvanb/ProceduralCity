@@ -57,3 +57,5 @@ MonoBehaviour:
     CenterShape: 0
     CenterAngle: 120
     CityScale: 100
+    RoadTextureTiling: 0
+    RoadMaterial: {fileID: 2100000, guid: 1fe2adad338f9fe4a90314566ac085e2, type: 2}

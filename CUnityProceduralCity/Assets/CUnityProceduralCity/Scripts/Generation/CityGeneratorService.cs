@@ -32,9 +32,13 @@ namespace CUnity.ProceduralCity.Generation
             roadsViewObject.transform.parent = cityViewObject.transform;
             roadsViewObject.transform.localPosition = Vector3.zero;
 
+            Material roadMaterial = rules.RoadMaterial;
+
             RoadsView roadsView = roadsViewObject.AddComponent<RoadsView>();
 
-            roadsView.Initialize(roadsModel);
+            roadsView.Initialize(
+                roadsModel,
+                roadMaterial);
 
             // Populate city with building objects.
 
