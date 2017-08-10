@@ -112,13 +112,27 @@ namespace CUnity.ProceduralCity.Generation
             // Populate intersectionPoints list.
             List<Vector3[]> intersectionPoints = new List<Vector3[]>();
 
+            /*
             foreach (Vector2 point in intersection.Points)
             {
                 // TODO: Here's a doozy: you refactored away mySegement as it looks dirty, but here
                 // you need it! How do you access the data cleanly? -Casper 2017-08-09
                 intersectionPoints.Add(GetVerticeOffset(point, point.mySegement.GetOther(point)));
             }
+            */
 
+            for (int i = 0; i < intersection.SegmentsCount; ++i)
+            {
+                Vector2 point = intersection.GetSegmentPoint(i);
+
+                Vector2 otherPoint = intersection.GetSegmentPoint(i, true);
+
+                Vector3[] vertexOffsets = GetVertexOffsets(point, otherPoint);
+
+                intersectionPoints.Add(vertexOffsets);
+            }
+
+            // TODO: Get this reference in a different way. -Casper 2017-08-10
             Mesh mesh = this.Intersections.GetComponent<MeshFilter>().sharedMesh;
 
             //get mesh details
@@ -130,28 +144,28 @@ namespace CUnity.ProceduralCity.Generation
             //get last triangle
             int last = vertices.Count - 1;
 
-            List<Vector3> interVecs = new List<Vector3>();
+            List<Vector3> intersectionVectors = new List<Vector3>();
 
             foreach (Vector3[] points in intersectionPoints)
             {
-                interVecs.AddRange(points);
+                intersectionVectors.AddRange(points);
             }
 
-            Vector3 center = new Vector3(interVecs.Average(p => p.x), 0, interVecs.Average(p => p.z));
+            Vector3 center = new Vector3(intersectionVectors.Average(p => p.x), 0, intersectionVectors.Average(p => p.z));
 
             IComparer<Vector3> comparer = new CircleSort(center);
 
-            interVecs.Sort(comparer);
+            intersectionVectors.Sort(comparer);
 
-            interVecs.Reverse();
+            intersectionVectors.Reverse();
 
-            interVecs.Add(interVecs[0]);
+            intersectionVectors.Add(intersectionVectors[0]);
 
-            for (int i = 0; i < interVecs.Count - 1; i++)
+            for (int i = 0; i < intersectionVectors.Count - 1; i++)
             {
                 //create vertices
-                Vector3 vertA = interVecs[i];
-                Vector3 vertB = interVecs[i + 1];
+                Vector3 vertA = intersectionVectors[i];
+                Vector3 vertB = intersectionVectors[i + 1];
                 Vector3 vertC = center;
 
                 //add vertices
@@ -174,13 +188,13 @@ namespace CUnity.ProceduralCity.Generation
             mesh.RecalculateNormals();
         }
 
-        protected Vector3[] GetVerticeOffset(RoadPoint main, RoadPoint other)
+        protected Vector3[] GetVertexOffsets(Vector2 main, Vector2 other)
         {
             Vector3[] result = new Vector3[2];
 
             //get the road start and end
-            Vector3 pointA = new Vector3(main.point.x, 0, main.point.y);
-            Vector3 pointB = new Vector3(other.point.x, 0, other.point.y);
+            Vector3 pointA = new Vector3(main.x, 0, main.y);
+            Vector3 pointB = new Vector3(other.x, 0, other.y);
 
             //adjust for intersection
             Vector3 segvec = (pointA - pointB).normalized;

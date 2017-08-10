@@ -43,9 +43,9 @@ namespace CUnity.ProceduralCity.Generation
             }
         }
 
+        // TODO: Refactor this to take a parameter defining the number of sides to the circle. -Casper 2017-08-01
         public void CreateOShape(Vector2 position)
         {
-            // TODO: Refactor this to take an angle parameter. -Casper 2017-08-01
             float angle = 360f / 8f;
 
             RoadSegment last = null;
@@ -70,8 +70,12 @@ namespace CUnity.ProceduralCity.Generation
 
                 if (last != null)
                 {
-                    RoadIntersection intersection = new RoadIntersection(
-                        new List<Vector2>(){ segment.PointA, last.PointA });
+                    // RoadIntersection intersection = new RoadIntersection(
+                    //     new List<Vector2>(){ segment.PointA, last.PointA });
+                    RoadIntersection intersection = new RoadIntersection();
+
+                    intersection.AddSegment(segment);
+                    intersection.AddSegment(last);
 
                     this.Intersections.Add(intersection);
                 }
@@ -79,8 +83,12 @@ namespace CUnity.ProceduralCity.Generation
                 last = segment;
             }
 
-            RoadIntersection finalIntersection = new RoadIntersection(
-                new List<Vector2>(){ first.PointA, last.PointA });
+            // RoadIntersection finalIntersection = new RoadIntersection(
+            //     new List<Vector2>(){ first.PointA, last.PointA });
+            RoadIntersection finalIntersection = new RoadIntersection();
+
+            finalIntersection.AddSegment(first);
+            finalIntersection.AddSegment(last);
 
             this.Intersections.Add(finalIntersection);
         }
@@ -186,11 +194,30 @@ namespace CUnity.ProceduralCity.Generation
                     bool sc = segmentsB[0].CalculateLength() > shortCutoff;
                     bool sd = segmentsB[1].CalculateLength() > shortCutoff;
 
-                    List<Vector2> points = new List<Vector2>();
+                    //RoadIntersection inter = new RoadIntersection(points);
+                    RoadIntersection intersection = new RoadIntersection();
+
+                    //List<Vector2> points = new List<Vector2>();
+
+                    // TODO: Refactor to make this less messy (use loop instead of ifs). -Casper 2017-08-10
+
+                    // RoadSegment[] segmentsAB = concat segmentsA + segmentsB
+                    // foreach (RoadSegment segment in segmentsAB)
+                    // {
+                    //     if (segment.CalculateLength() > shortCutoff)
+                    //     {
+                    //         intersection.AddSegment(segment, true);
+                    //     }
+                    //     else
+                    //     {
+                    //         this.Segments.RemoveAll(s => s.IsEqual(segment));
+                    //     }
+                    // }
 
                     if (sa)
                     {
-                        points.Add(segmentsA[0].PointB);
+                        //points.Add(segmentsA[0].PointB);
+                        intersection.AddSegment(segmentsA[0], true);
                     }
                     else
                     {
@@ -199,7 +226,8 @@ namespace CUnity.ProceduralCity.Generation
 
                     if (sb)
                     {
-                        points.Add(segmentsA[1].PointB);
+                        //points.Add(segmentsA[1].PointB);
+                        intersection.AddSegment(segmentsA[1], true);
                     }
                     else
                     {
@@ -208,7 +236,8 @@ namespace CUnity.ProceduralCity.Generation
 
                     if (sc)
                     {
-                        points.Add(segmentsB[0].PointB);
+                        //points.Add(segmentsB[0].PointB);
+                        intersection.AddSegment(segmentsB[0], true);
                     }
                     else
                     {
@@ -217,16 +246,15 @@ namespace CUnity.ProceduralCity.Generation
 
                     if (sd)
                     {
-                        points.Add(segmentsB[1].PointB);
+                        //points.Add(segmentsB[1].PointB);
+                        intersection.AddSegment(segmentsB[1], true);
                     }
                     else
                     {
                         this.Segments.RemoveAll(p => p.IsEqual(segmentsB[1]));
                     }
 
-                    RoadIntersection inter = new RoadIntersection(points);
-
-                    this.Intersections.Add(inter);
+                    this.Intersections.Add(intersection);
                 }
             }
 
@@ -261,11 +289,30 @@ namespace CUnity.ProceduralCity.Generation
                     bool sc = segmentsB[0].CalculateLength() > shortCutoff;
                     bool sd = segmentsB[1].CalculateLength() > shortCutoff;
 
-                    List<Vector2> points = new List<Vector2>();
+                    //RoadIntersection inter = new RoadIntersection(points);
+                    RoadIntersection intersection = new RoadIntersection();
+
+                    //List<Vector2> points = new List<Vector2>();
+
+                    // TODO: Refactor to make this less messy (use loop instead of ifs). -Casper 2017-08-10
+
+                    // RoadSegment[] segmentsAB = concat segmentsA + segmentsB
+                    // foreach (RoadSegment segment in segmentsAB)
+                    // {
+                    //     if (segment.CalculateLength() > shortCutoff)
+                    //     {
+                    //         intersection.AddSegment(segment, true);
+                    //     }
+                    //     else
+                    //     {
+                    //         this.Segments.RemoveAll(s => s.IsEqual(segment));
+                    //     }
+                    // }
 
                     if (sa)
                     {
-                        points.Add(segmentsA[0].PointB);
+                        //points.Add(segmentsA[0].PointB);
+                        intersection.AddSegment(segmentsA[0], true);
                     }
                     else
                     {
@@ -274,7 +321,8 @@ namespace CUnity.ProceduralCity.Generation
 
                     if (sb)
                     {
-                        points.Add(segmentsA[1].PointB);
+                        //points.Add(segmentsA[1].PointB);
+                        intersection.AddSegment(segmentsA[1], true);
                     }
                     else
                     {
@@ -283,7 +331,8 @@ namespace CUnity.ProceduralCity.Generation
 
                     if (sc)
                     {
-                        points.Add(segmentsB[0].PointB);
+                        //points.Add(segmentsB[0].PointB);
+                        intersection.AddSegment(segmentsB[0], true);
                     }
                     else
                     {
@@ -292,15 +341,15 @@ namespace CUnity.ProceduralCity.Generation
 
                     if (sd)
                     {
-                        points.Add(segmentsB[1].PointB);
+                        //points.Add(segmentsB[1].PointB);
+                        intersection.AddSegment(segmentsB[1], true);
                     }
                     else
                     {
                         this.Segments.RemoveAll(p => p.IsEqual(segmentsB[1]));
                     }
 
-                    RoadIntersection inter = new RoadIntersection(points);
-                    this.Intersections.Add(inter);
+                    this.Intersections.Add(intersection);
                 }
             }
 
@@ -314,34 +363,52 @@ namespace CUnity.ProceduralCity.Generation
 
                 if (seg1 && seg2)
                 {
-                    RoadIntersection inter = new RoadIntersection(
-                        new List<Vector2>{
-                            segments[0].PointB,
-                            segments[1].PointB,
-                            newSegment.PointA,
-                            newSegmentOther.PointA });
+                    // RoadIntersection inter = new RoadIntersection(
+                    //     new List<Vector2>{
+                    //         segments[0].PointB,
+                    //         segments[1].PointB,
+                    //         newSegment.PointA,
+                    //         newSegmentOther.PointA });
+                    RoadIntersection intersection = new RoadIntersection();
 
-                    this.Intersections.Add(inter);
+                    intersection.AddSegment(segments[0], true);
+                    intersection.AddSegment(segments[1], true);
+                    intersection.AddSegment(newSegment);
+                    intersection.AddSegment(newSegmentOther);
+
+                    this.Intersections.Add(intersection);
                 }
                 else if (seg1)
                 {
-                    RoadIntersection inter = new RoadIntersection(
-                        new List<Vector2>{
-                            segments[0].PointB,
-                            segments[1].PointB,
-                            newSegment.PointA });
+                    // RoadIntersection inter = new RoadIntersection(
+                    //     new List<Vector2>{
+                    //         segments[0].PointB,
+                    //         segments[1].PointB,
+                    //         newSegment.PointA });
 
-                    this.Intersections.Add(inter);
+                    RoadIntersection intersection = new RoadIntersection();
+
+                    intersection.AddSegment(segments[0], true);
+                    intersection.AddSegment(segments[1], true);
+                    intersection.AddSegment(newSegment);
+
+                    this.Intersections.Add(intersection);
                 }
                 else if (seg2)
                 {
-                    RoadIntersection inter = new RoadIntersection(
-                        new List<Vector2>{
-                            segments[0].PointB,
-                            segments[1].PointB,
-                            newSegmentOther.PointA });
+                    // RoadIntersection inter = new RoadIntersection(
+                    //     new List<Vector2>{
+                    //         segments[0].PointB,
+                    //         segments[1].PointB,
+                    //         newSegmentOther.PointA });
 
-                    this.Intersections.Add(inter);
+                    RoadIntersection intersection = new RoadIntersection();
+
+                    intersection.AddSegment(segments[0], true);
+                    intersection.AddSegment(segments[1], true);
+                    intersection.AddSegment(newSegmentOther);
+
+                    this.Intersections.Add(intersection);
                 }
             }
         }
@@ -465,7 +532,6 @@ namespace CUnity.ProceduralCity.Generation
                     intersection = new Vector2(interTmp.x, interTmp.y);
                     count++;
                 }
-                //else if (inter2Segments(segment, seg, out interTmp, out tmp) != 0)
             }
 
             return count;
