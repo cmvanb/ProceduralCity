@@ -8,8 +8,10 @@ namespace CUnity.ProceduralCity.Generation
         // Local vars.
         protected RoadsModel model;
 
-        protected MeshFilter meshFilter;
-        protected MeshRenderer meshRenderer;
+        protected MeshFilter roadsMeshFilter;
+        protected MeshRenderer roadsMeshRenderer;
+        protected MeshFilter intersectionsMeshFilter;
+        protected MeshRenderer intersectionsMeshRenderer;
 
         // Public methods.
         public void Initialize(RoadsModel model, Material roadMaterial)
@@ -19,21 +21,30 @@ namespace CUnity.ProceduralCity.Generation
             // TODO: Implement override ToString() on RoadsModel. -Casper 2017-08-09
             Debug.Log(model.ToString());
 
-            this.meshFilter = this.gameObject.AddComponent<MeshFilter>();
-            this.meshFilter.mesh = new Mesh();
+            // Create roads.
+            this.roadsMeshFilter = this.gameObject.AddComponent<MeshFilter>();
+            this.roadsMeshFilter.mesh = new Mesh();
 
-            this.meshRenderer = this.gameObject.AddComponent<MeshRenderer>();
-            this.meshRenderer.sharedMaterial = roadMaterial;
+            this.roadsMeshRenderer = this.gameObject.AddComponent<MeshRenderer>();
+            this.roadsMeshRenderer.sharedMaterial = roadMaterial;
 
             foreach (RoadSegment segment in model.Segments)
             {
                 AddSegmentQuad(segment);
             }
 
+            // Create intersections.
+            GameObject intersectionsObject = new GameObject("Intersections");
+
+            intersectionsObject.transform.parent = transform;
+            intersectionsObject.transform.localPosition = Vector3.zero;
+
+            this.intersectionsMeshFilter = intersectionsObject.AddComponent<MeshFilter>();
+            this.intersectionsMeshRenderer = intersectionsObject.gameObject.AddComponent<MeshRenderer>();
+
             foreach (RoadIntersection intersection in model.Intersections)
             {
-                // TODO: Implement. -Casper 2017-08-09
-                //AddIntersection(intersection);
+                AddIntersection(intersection);
             }
         }
 
@@ -44,15 +55,15 @@ namespace CUnity.ProceduralCity.Generation
             // TODO: Implement. -Casper 2017-08-09
             // dereference model
 
-            // destroy meshFilter
+            // destroy roadsMeshFilter
 
-            // destroy meshRenderer
+            // destroy roadsMeshRenderer
         }
 
         // Local methods.
         protected void AddSegmentQuad(RoadSegment segment)
         {
-            Mesh mesh = this.meshFilter.mesh;
+            Mesh mesh = this.roadsMeshFilter.mesh;
 
             // get mesh details
             List<int> triangles = mesh.vertexCount == 0 ? new List<int>() : new List<int>(mesh.triangles);
@@ -132,16 +143,15 @@ namespace CUnity.ProceduralCity.Generation
                 intersectionPoints.Add(vertexOffsets);
             }
 
-            // TODO: Get this reference in a different way. -Casper 2017-08-10
-            Mesh mesh = this.Intersections.GetComponent<MeshFilter>().sharedMesh;
+            Mesh mesh = this.intersectionsMeshFilter.sharedMesh;
 
-            //get mesh details
+            // get mesh details
             List<int> triangles = mesh.vertexCount == 0 ? new List<int>() : new List<int>(mesh.triangles);
             List<Vector3> vertices = new List<Vector3>(mesh.vertices);
             List<Vector3> normals = new List<Vector3>(mesh.normals);
             List<Vector2> uvs = new List<Vector2>(mesh.uv);
 
-            //get last triangle
+            // get last triangle
             int last = vertices.Count - 1;
 
             List<Vector3> intersectionVectors = new List<Vector3>();
