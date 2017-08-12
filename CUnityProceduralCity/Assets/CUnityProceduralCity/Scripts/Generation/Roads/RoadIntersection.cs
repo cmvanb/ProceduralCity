@@ -35,6 +35,14 @@ namespace CUnity.ProceduralCity.Generation
         }
         */
 
+        public int SegmentsCount
+        {
+            get
+            {
+                return this.tuples.Count;
+            }
+        }
+
         protected List<Tuple<RoadSegment, bool>> tuples = new List<Tuple<RoadSegment, bool>>();
 
         public void AddSegment(RoadSegment segment, bool attachPointB = false)

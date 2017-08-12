@@ -19,7 +19,7 @@ namespace CUnity.ProceduralCity.Generation
                 rules.CenterPosition,
                 rules.CenterAngle);
 
-            roadsModel.SplitSegments(0);
+            //roadsModel.SplitSegments(0);
             // roadsModel.SplitSegments(0);
             // roadsModel.SplitSegments(1);
             // roadsModel.SplitSegments(1);
