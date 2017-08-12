@@ -1,21 +1,12 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace CUnity.ProceduralCity.Generation
 {
-    // TODO: See if you can refactor this class into a simple List<Vector2>. -Casper 2017-08-09
     public class RoadIntersection
     {
         /*
-        public List<Vector2> Points { get; private set; }
-
-        // NOTE: DEPRECATED -Casper 2017-08-10
-        public RoadIntersection(List<Vector2> points)
-        {
-            this.Points = points;
-        }
-        */
-
         public int SegmentsCount
         {
             get
@@ -30,12 +21,6 @@ namespace CUnity.ProceduralCity.Generation
 
         public void AddSegment(RoadSegment segment, bool attachPointB = false)
         {
-            /*
-            Debug.Assert(
-                0 <= pointIndex && pointIndex <= 1,
-                "pointIndex [" + pointIndex + "] is out of range.");
-            */
-
             segments.Add(segment);
             attachPointBs.Add(attachPointB);
         }
@@ -45,6 +30,23 @@ namespace CUnity.ProceduralCity.Generation
             RoadSegment segment = this.segments[segmentIndex];
 
             bool returnPointB = this.attachPointBs[segmentIndex] != getOtherPoint;
+
+            return returnPointB ? segment.PointB : segment.PointA;
+        }
+        */
+
+        protected List<Tuple<RoadSegment, bool>> tuples = new List<Tuple<RoadSegment, bool>>();
+
+        public void AddSegment(RoadSegment segment, bool attachPointB = false)
+        {
+            tuples.Add(new Tuple<RoadSegment, bool>(segment, attachPointB));
+        }
+
+        public Vector2 GetSegmentPoint(int index, bool getOtherPoint = false)
+        {
+            RoadSegment segment = this.tuples[index].Item1;
+
+            bool returnPointB = this.tuples[index].Item2 != getOtherPoint;
 
             return returnPointB ? segment.PointB : segment.PointA;
         }

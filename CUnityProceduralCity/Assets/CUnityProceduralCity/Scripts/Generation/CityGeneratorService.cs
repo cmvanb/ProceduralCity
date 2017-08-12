@@ -20,11 +20,11 @@ namespace CUnity.ProceduralCity.Generation
                 rules.CenterAngle);
 
             roadsModel.SplitSegments(0);
-            roadsModel.SplitSegments(0);
-            roadsModel.SplitSegments(1);
-            roadsModel.SplitSegments(1);
-            roadsModel.SplitSegments(2);
-            roadsModel.SplitSegments(3);
+            // roadsModel.SplitSegments(0);
+            // roadsModel.SplitSegments(1);
+            // roadsModel.SplitSegments(1);
+            // roadsModel.SplitSegments(2);
+            // roadsModel.SplitSegments(3);
 
             // Generate roads view (a game object).
             GameObject roadsViewObject = new GameObject("RoadsView");

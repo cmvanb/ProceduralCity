@@ -11,7 +11,7 @@ namespace CUnity.ProceduralCity.Generation
         {
             CityGeneratorService service = new CityGeneratorService();
 
-            GameObject cityObject = service.Generate(this.Rules);
+            service.Generate(this.Rules);
         }
     }
 }

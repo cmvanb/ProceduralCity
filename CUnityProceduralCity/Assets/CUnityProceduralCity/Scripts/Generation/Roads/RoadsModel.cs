@@ -142,7 +142,8 @@ namespace CUnity.ProceduralCity.Generation
             // calaculate other new point
             Vector3 per = Vector3.Cross(p1 - p2, Vector3.down).normalized;
 
-            float newLength = this.Scale / ((segment.Level + 1) * Random.Range(1f, 2f));
+            float newLength = this.Scale / 5f;//((segment.Level + 1) * Random.Range(1f, 2f));
+
             Vector3 newPointEnd = newPoint + (per * newLength);
 
             // add new segment
