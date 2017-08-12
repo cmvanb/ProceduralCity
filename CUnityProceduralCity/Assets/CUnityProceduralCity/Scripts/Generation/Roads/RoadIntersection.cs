@@ -1,6 +1,6 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
+using CUnity.Common.DataStructures;
 
 namespace CUnity.ProceduralCity.Generation
 {
