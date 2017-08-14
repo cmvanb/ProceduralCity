@@ -7,6 +7,17 @@ namespace CUnity.ProceduralCity.Generation
         [SerializeField]
         protected GeneratorRules Rules;
 
+        [SerializeField]
+        protected bool generateOnStart = false;
+
+        public void Start()
+        {
+            if (generateOnStart)
+            {
+                Generate();
+            }
+        }
+
         public void Generate()
         {
             CityGeneratorService service = new CityGeneratorService();

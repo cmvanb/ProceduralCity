@@ -6,35 +6,6 @@ namespace CUnity.ProceduralCity.Generation
 {
     public class RoadIntersection
     {
-        /*
-        public int SegmentsCount
-        {
-            get
-            {
-                return this.segments.Count;
-            }
-        }
-
-        protected List<RoadSegment> segments = new List<RoadSegment>();
-
-        protected List<bool> attachPointBs = new List<bool>();
-
-        public void AddSegment(RoadSegment segment, bool attachPointB = false)
-        {
-            segments.Add(segment);
-            attachPointBs.Add(attachPointB);
-        }
-
-        public Vector2 GetSegmentPoint(int segmentIndex, bool getOtherPoint = false)
-        {
-            RoadSegment segment = this.segments[segmentIndex];
-
-            bool returnPointB = this.attachPointBs[segmentIndex] != getOtherPoint;
-
-            return returnPointB ? segment.PointB : segment.PointA;
-        }
-        */
-
         public int SegmentsCount
         {
             get

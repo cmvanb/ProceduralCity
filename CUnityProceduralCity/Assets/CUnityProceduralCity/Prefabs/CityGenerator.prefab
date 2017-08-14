@@ -61,3 +61,4 @@ MonoBehaviour:
     RoadMaterial: {fileID: 2100000, guid: 1fe2adad338f9fe4a90314566ac085e2, type: 2}
     RoadWidth: 0.02
     IntersectionOffset: 0.5
+  generateOnStart: 1

@@ -56,8 +56,8 @@ namespace CUnity.ProceduralCity.Generation
                 Quaternion rotationA = Quaternion.Euler(0, 0, angle * i);
                 Quaternion rotationB = Quaternion.Euler(0, 0, angle * (i + 1));
 
-                Vector2 a = rotationA * (new Vector2(this.Scale / 2.5f, 0) + position);
-                Vector2 b = rotationB * (new Vector2(this.Scale / 2.5f, 0) + position);
+                Vector2 a = rotationA * (new Vector2(this.Scale / 2f, 0) + position);
+                Vector2 b = rotationB * (new Vector2(this.Scale / 2f, 0) + position);
 
                 RoadSegment segment = new RoadSegment(a, b, 0);
 
@@ -74,7 +74,7 @@ namespace CUnity.ProceduralCity.Generation
                     //     new List<Vector2>(){ segment.PointA, last.PointA });
                     RoadIntersection intersection = new RoadIntersection();
 
-                    intersection.AddSegment(segment);
+                    intersection.AddSegment(segment, true);
                     intersection.AddSegment(last);
 
                     this.Intersections.Add(intersection);
@@ -87,7 +87,7 @@ namespace CUnity.ProceduralCity.Generation
             //     new List<Vector2>(){ first.PointA, last.PointA });
             RoadIntersection finalIntersection = new RoadIntersection();
 
-            finalIntersection.AddSegment(first);
+            finalIntersection.AddSegment(first, true);
             finalIntersection.AddSegment(last);
 
             this.Intersections.Add(finalIntersection);
@@ -130,6 +130,7 @@ namespace CUnity.ProceduralCity.Generation
             // get split distance
             Vector3 p1 = new Vector3(segment.PointA.x, 0, segment.PointA.y);
             Vector3 p2 = new Vector3(segment.PointB.x, 0, segment.PointB.y);
+
             float length = Vector3.Distance(p1, p2);
             length *= splitRatio;
 
