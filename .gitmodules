@@ -1,0 +1,4 @@
+[submodule "src/Submodules/UnityCommon"]
+	path = src/Submodules/UnityCommon
+	url = git@github.com:cmvanb/UnityCommon.git
+	branch = master
