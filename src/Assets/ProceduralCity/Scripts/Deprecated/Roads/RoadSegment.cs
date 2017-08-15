@@ -1,7 +1,7 @@
 using UnityEngine;
-using CUnity.Common.Math;
+using AltSrc.UnityCommon.Math;
 
-namespace CUnity.ProceduralCity.Deprecated
+namespace AltSrc.ProceduralCity.Deprecated
 {
     public class RoadSegment
     {

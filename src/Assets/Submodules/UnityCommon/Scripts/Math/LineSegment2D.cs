@@ -13,18 +13,17 @@ namespace AltSrc.UnityCommon.Math
             this.PointB = pointB;
         }
 
-        /* -----------------------------------------------------------------------------------------
-        Check whether two finite line segments intersect.
-        NOTE: The out values may not always exist.
-
-          @param segmentA - Finite line segment.
-          @param segmentB - Finite line segment.
-          @out i0         - Intersection point (if it exists)
-          @out i1         - Intersection end point (if the segments overlap)
-          @returns        - 0: Disjointed, no intersection.
-                            1: Intersection at unique point 'intersectPoint'.
-                            2: Overlapping segments from 'intersectPoint' to 'intersectEndpoint'.
-        ----------------------------------------------------------------------------------------- */
+        /// <summary>
+        ///   Check whether two finite line segments intersect.
+        ///   NOTE: The out values may not always exist.
+        ///       @param segmentA - Finite line segment.
+        ///       @param segmentB - Finite line segment.
+        ///       @out i0         - Intersection point (if it exists)
+        ///       @out i1         - Intersection end point (if the segments overlap)
+        ///       @returns        - 0: Disjointed, no intersection.
+        ///                         1: Intersection at unique point 'intersectPoint'.
+        ///                         2: Overlapping segments from 'intersectPoint' to 'intersectEndpoint'.
+        /// </summary>
         public static int CheckIntersection(
             LineSegment2D segmentA,
             LineSegment2D segmentB,
@@ -170,10 +169,13 @@ namespace AltSrc.UnityCommon.Math
             return 1;
         }
 
-        // ContainsPoint(): determine if a point is inside a segment
-        //    Input:  a point P, and a collinear segment S
-        //    Return: 1 = P is inside S
-        //            0 = P is  not inside S
+        /// <summary>
+        ///   ContainsPoint(): determine if a point is inside a segment
+        ///       @param P - point
+        ///       @param S - collinear segment
+        ///       @returns - 0 = P is  not inside S
+        ///                  1 = P is inside S
+        /// </summary>
         public static int ContainsPoint(Vector2 P, LineSegment2D S)
         {
             // S is not vertical

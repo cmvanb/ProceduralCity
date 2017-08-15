@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace CUnity.ProceduralCity.Deprecated
+namespace AltSrc.ProceduralCity.Deprecated
 {
     public class CityGeneratorService
     {

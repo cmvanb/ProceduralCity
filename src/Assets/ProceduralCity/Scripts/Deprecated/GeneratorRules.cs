@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace CUnity.ProceduralCity.Deprecated
+namespace AltSrc.ProceduralCity.Deprecated
 {
     public enum CenterShape
     {

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
-using CUnity.Common.DataStructures;
+using AltSrc.UnityCommon.DataStructures;
 
-namespace CUnity.ProceduralCity.Deprecated
+namespace AltSrc.ProceduralCity.Deprecated
 {
     public class RoadIntersection
     {

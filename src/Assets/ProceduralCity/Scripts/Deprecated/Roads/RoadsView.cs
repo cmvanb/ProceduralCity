@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-namespace CUnity.ProceduralCity.Deprecated
+namespace AltSrc.ProceduralCity.Deprecated
 {
     public class RoadsView : MonoBehaviour
     {

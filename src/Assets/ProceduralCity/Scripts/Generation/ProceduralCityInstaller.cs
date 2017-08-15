@@ -3,11 +3,11 @@ using Zenject;
 
 namespace AltSrc.ProceduralCity.Generation
 {
-    public class CityGeneratorInstaller : Installer<CityGeneratorInstaller>
+    public class ProceduralCityInstaller : MonoInstaller<ProceduralCityInstaller>
     {
         public override void InstallBindings()
         {
-            Container.Bind<CityModel>().AsTransient();
+            CityGeneratorInstaller.Install(Container);
         }
     }
 }
