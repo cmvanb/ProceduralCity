@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using Zenject;
+using AltSrc.ProceduralCity.Generation.Roads;
 
 namespace AltSrc.ProceduralCity.Generation
 {
@@ -25,6 +26,13 @@ namespace AltSrc.ProceduralCity.Generation
             // TODO: random seed
 
             // TODO: setup root segment
+            var length = this.rules.DefaultRoadLengths[RoadType.Highway];
+
+            var rootSegment = new RoadSegment(
+                new Vector2(0f, 0f),
+                new Vector2(length, 0f),
+                0,
+                RoadType.Highway);
 
             // TODO: generate model roads
 

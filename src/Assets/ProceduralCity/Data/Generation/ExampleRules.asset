@@ -11,4 +11,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a83589fe9b78a545a36b7f30cfa8897, type: 3}
   m_Name: ExampleRules
   m_EditorClassIdentifier: 
-  CityName: City01
+  CityName: Example City
+  DefaultRoadLengths:
+    _keys: 0000000001000000
+    _values:
+    - 30
+    - 40
