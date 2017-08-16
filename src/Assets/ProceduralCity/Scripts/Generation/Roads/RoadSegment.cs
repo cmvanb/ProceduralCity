@@ -6,6 +6,7 @@ namespace AltSrc.ProceduralCity.Generation.Roads
 {
     public class RoadSegment
     {
+        // TODO: Consider collapsing accessors for better readability. -Casper 2017-08-17
         public Vector2 PointA
         {
             get
@@ -43,13 +44,9 @@ namespace AltSrc.ProceduralCity.Generation.Roads
             RoadType roadType = RoadType.Normal)
         {
             this.LineSegment2D = new LineSegment2D(pointA, pointB);
-
             this.Priority = priority;
-
             this.LinksForward = new List<RoadSegment>();
-
             this.LinksBackward = new List<RoadSegment>();
-
             this.RoadType = roadType;
         }
 
