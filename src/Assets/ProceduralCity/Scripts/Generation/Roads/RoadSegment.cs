@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using AltSrc.UnityCommon.Math;
 
@@ -29,6 +30,10 @@ namespace AltSrc.ProceduralCity.Generation.Roads
         /// </summary>
         public int Priority { get; private set; }
 
+        public List<RoadSegment> LinksForward { get; private set; }
+
+        public List<RoadSegment> LinksBackward { get; private set; }
+
         public RoadType RoadType { get; private set; }
 
         public RoadSegment(
@@ -41,7 +46,20 @@ namespace AltSrc.ProceduralCity.Generation.Roads
 
             this.Priority = priority;
 
+            this.LinksForward = new List<RoadSegment>();
+
+            this.LinksBackward = new List<RoadSegment>();
+
             this.RoadType = roadType;
+        }
+
+        public static RoadSegment FromExisting(RoadSegment existingSegment)
+        {
+            return new RoadSegment(
+                existingSegment.PointA,
+                existingSegment.PointB,
+                existingSegment.Priority,
+                existingSegment.RoadType);
         }
     }
 }

@@ -15,5 +15,14 @@ MonoBehaviour:
   DefaultRoadLengths:
     _keys: 0000000001000000
     _values:
-    - 30
-    - 40
+    - 300
+    - 400
+  QuadTreeRect:
+    serializedVersion: 2
+    x: -20000
+    y: -20000
+    width: 40000
+    height: 40000
+  QuadTreeMaxObjectsPerNode: 8
+  QuadTreeMaxDepth: 8
+  MaxRoadSegments: 2000
