@@ -7,6 +7,20 @@ namespace AltSrc.UnityCommon.Math
         public Vector2 PointA { get; set; }
         public Vector2 PointB { get; set; }
 
+        // TODO: Consider optimizing this calculation by caching it. -Casper 2017-08-17
+        public Rect Bounds
+        {
+            get
+            {
+                float x = Mathf.Min(PointA.x, PointB.x);
+                float y = Mathf.Min(PointA.y, PointB.y);
+                float width = Mathf.Abs(PointA.x - PointB.x);
+                float height = Mathf.Abs(PointA.y - PointB.y);
+
+                return new Rect(x, y, width, height);
+            }
+        }
+
         public LineSegment2D(Vector2 pointA, Vector2 pointB)
         {
             this.PointA = pointA;

@@ -51,20 +51,57 @@ namespace AltSrc.ProceduralCity.Generation
             priorityQueue.Add(rootSegment1);
             priorityQueue.Add(rootSegment2);
 
-            // TODO: generate road segments
-            List<RoadSegment> segments = new List<RoadSegment>();
-            QuadTree quadTree = new QuadTree(
+            // create list and quadtree used to generate road segments
+            List<RoadSegment> generatedSegments = new List<RoadSegment>();
+            QuadTree<RoadSegment> quadTree = new QuadTree<RoadSegment>(
                 0,
                 this.rules.QuadTreeRect,
                 this.rules.QuadTreeMaxObjectsPerNode,
                 this.rules.QuadTreeMaxDepth);
 
+            // loop through priority queue until we hit a limit
             while (priorityQueue.Count > 0
-                && segments.Count < this.rules.MaxRoadSegments)
+                && generatedSegments.Count < this.rules.MaxRoadSegments)
             {
-                // TODO: implement
-                throw new System.NotImplementedException();
+                // find highest priority (lowest value) segment
+                RoadSegment nextSegment = null;
+
+                foreach (RoadSegment s in priorityQueue)
+                {
+                    if (nextSegment == null
+                        || s.Priority < nextSegment.Priority)
+                    {
+                        nextSegment = s;
+                    }
+                }
+
+                // remove next segment from of queue
+                priorityQueue.Remove(nextSegment);
+
+                // validate segment passes local constraints
+                bool validSegment = CheckLocalConstraints(nextSegment, generatedSegments, quadTree);
+
+                if (validSegment)
+                {
+                    // TODO: Implement RoadSegment.SetupBranchLinks
+                    //nextSegment.SetupBranchLinks();
+
+                    // accept segment into list and quad tree
+                    generatedSegments.Add(nextSegment);
+                    quadTree.Insert(nextSegment);
+
+                    // generate new segments and add to priority queue
+                    List<RoadSegment> newSegments = GenerateNewSegmentsFromGlobalGoals(nextSegment);
+
+                    foreach (RoadSegment s in newSegments)
+                    {
+                        s.Priority += nextSegment.Priority + 1;
+                        priorityQueue.Add(nextSegment);
+                    }
+                }
             }
+
+            Debug.Log(generatedSegments.Count + " segments generated.");
 
             // TODO: add segments to model
 
@@ -75,6 +112,25 @@ namespace AltSrc.ProceduralCity.Generation
             // TODO: hookup view with model
 
             // TODO: generate view objects
+        }
+
+        protected bool CheckLocalConstraints(
+            RoadSegment segment,
+            List<RoadSegment> segments,
+            QuadTree<RoadSegment> quadTree)
+        {
+            List<RoadSegment> quadTreeMatches = quadTree.Retrieve(segment);
+
+            // TODO: implement
+
+            return false;
+        }
+
+        protected List<RoadSegment> GenerateNewSegmentsFromGlobalGoals(RoadSegment previousSegment)
+        {
+            // TODO: implement
+
+            return new List<RoadSegment>();
         }
     }
 }

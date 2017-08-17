@@ -3,18 +3,23 @@ using UnityEngine;
 
 namespace AltSrc.UnityCommon.DataStructures
 {
+    public interface IBounds
+    {
+        Rect Bounds { get; }
+    }
+
     /// <summary>
     ///   A quadtree is a tree data structure in which each internal node has exactly four children.
     /// </summary>
-    public class QuadTree
+    public class QuadTree<T> where T : IBounds
     {
         public int Depth { get; private set; }
         public Rect Bounds { get; private set; }
         public int MaxObjectsPerNode { get; private set; }
         public int MaxDepth { get; private set; }
 
-        protected List<Rect> objects;
-        protected QuadTree[] nodes;
+        protected List<T> objects;
+        protected QuadTree<T>[] nodes;
 
         public QuadTree(int depth, Rect bounds, int maxObjectsPerNode = 8, int maxDepth = 8)
         {
@@ -23,28 +28,28 @@ namespace AltSrc.UnityCommon.DataStructures
             this.MaxObjectsPerNode = maxObjectsPerNode;
             this.MaxDepth = maxDepth;
 
-            this.objects = new List<Rect>();
-            this.nodes = new QuadTree[4];
+            this.objects = new List<T>();
+            this.nodes = new QuadTree<T>[4];
         }
 
         /// <summary>
         ///   Insert an object into the quad tree. If this node exceeds its maximum it will split
         ///   into subnodes and insert the objects that fit into those subnodes.
         /// </summary>
-        public void Insert(Rect rect)
+        public void Insert(T o)
         {
             if (this.nodes[0] != null)
             {
-                int index = GetIndex(rect);
+                int index = GetIndex(o);
 
                 if (index != -1)
                 {
-                    this.nodes[index].Insert(rect);
+                    this.nodes[index].Insert(o);
                     return;
                 }
             }
 
-            this.objects.Add(rect);
+            this.objects.Add(o);
 
             if (this.objects.Count > this.MaxObjectsPerNode
                 && this.Depth < this.MaxDepth)
@@ -58,12 +63,12 @@ namespace AltSrc.UnityCommon.DataStructures
 
                 while (i < this.objects.Count)
                 {
-                    Rect r = this.objects[i];
-                    int index = GetIndex(r);
+                    T obj = this.objects[i];
+                    int index = GetIndex(obj);
 
                     if (index != -1)
                     {
-                        this.nodes[index].Insert(r);
+                        this.nodes[index].Insert(obj);
                         this.objects.RemoveAt(i);
                     }
                     else
@@ -77,15 +82,15 @@ namespace AltSrc.UnityCommon.DataStructures
         /// <summary>
         ///   Retrieve a list of objects that fall within a rectangle.
         /// </summary>
-        public List<Rect> Retrieve(Rect rect)
+        public List<T> Retrieve(T o)
         {
-            List<Rect> retrieved = new List<Rect>();
-            int index = GetIndex(rect);
+            List<T> retrieved = new List<T>();
+            int index = GetIndex(o);
 
             if (index != -1
                 && this.nodes[0] == null)
             {
-                retrieved.AddRange(this.nodes[index].Retrieve(rect));
+                retrieved.AddRange(this.nodes[index].Retrieve(o));
             }
 
             retrieved.AddRange(this.objects);
@@ -119,22 +124,22 @@ namespace AltSrc.UnityCommon.DataStructures
             float x = this.Bounds.x;
             float y = this.Bounds.y;
 
-            nodes[0] = new QuadTree(
+            nodes[0] = new QuadTree<T>(
                 this.Depth + 1,
                 new Rect(x + splitWidth, y, splitWidth, splitHeight),
                 this.MaxObjectsPerNode,
                 this.MaxDepth);
-            nodes[1] = new QuadTree(
+            nodes[1] = new QuadTree<T>(
                 this.Depth + 1,
                 new Rect(x, y, splitWidth, splitHeight),
                 this.MaxObjectsPerNode,
                 this.MaxDepth);
-            nodes[2] = new QuadTree(
+            nodes[2] = new QuadTree<T>(
                 this.Depth + 1,
                 new Rect(x, y + splitHeight, splitWidth, splitHeight),
                 this.MaxObjectsPerNode,
                 this.MaxDepth);
-            nodes[3] = new QuadTree(
+            nodes[3] = new QuadTree<T>(
                 this.Depth + 1,
                 new Rect(x + splitWidth, y + splitHeight, splitWidth, splitHeight),
                 this.MaxObjectsPerNode,
@@ -145,24 +150,24 @@ namespace AltSrc.UnityCommon.DataStructures
         ///   Determine which node the object belongs in. A return value of -1 means the object
         ///   can't fit within a subnode and must belong to the parent node.
         /// </summary>
-        protected int GetIndex(Rect rect)
+        protected int GetIndex(T o)
         {
             float xMiddle = this.Bounds.x + (this.Bounds.width / 2);
             float yMiddle = this.Bounds.y + (this.Bounds.height / 2);
 
             // Object can completely fit within the top quadrants.
             bool topQuadrants =
-                rect.y >= this.Bounds.y
-                && rect.y + rect.height < yMiddle;
+                o.Bounds.y >= this.Bounds.y
+                && o.Bounds.y + o.Bounds.height < yMiddle;
 
             // Object can completely fit within the bottom quadrants.
             bool bottomQuadrants =
-                rect.y > yMiddle
-                && rect.y + rect.height <= this.Bounds.y + this.Bounds.width;
+                o.Bounds.y > yMiddle
+                && o.Bounds.y + o.Bounds.height <= this.Bounds.y + this.Bounds.width;
 
             // Object can completely fit within the left quadrants.
-            if (rect.x >= this.Bounds.x
-                && rect.x + rect.width < xMiddle)
+            if (o.Bounds.x >= this.Bounds.x
+                && o.Bounds.x + o.Bounds.width < xMiddle)
             {
                 if (topQuadrants)
                 {
@@ -174,8 +179,8 @@ namespace AltSrc.UnityCommon.DataStructures
                 }
             }
             // Object can completely fit within the right quadrants.
-            else if (rect.x > xMiddle
-                && rect.x + rect.width <= this.Bounds.x + this.Bounds.width)
+            else if (o.Bounds.x > xMiddle
+                && o.Bounds.x + o.Bounds.width <= this.Bounds.x + this.Bounds.width)
             {
                 if (topQuadrants)
                 {
@@ -192,17 +197,17 @@ namespace AltSrc.UnityCommon.DataStructures
             // NOTE: If this function doesn't work as expected, try the following code. -Casper 2017-08-16
             /*
             // Object can completely fit within the top quadrants
-            bool topQuadrants = (rect.y < yMiddle && rect.y + rect.height < yMiddle);
+            bool topQuadrants = (o.Bounds.y < yMiddle && o.Bounds.y + o.Bounds.height < yMiddle);
             // Object can completely fit within the bottom quadrants
-            bool bottomQuadrants = (rect.y > yMiddle);
+            bool bottomQuadrants = (o.Bounds.y > yMiddle);
 
             // Object can completely fit within the left quadrants
-            if (rect.x < xMiddle && rect.x + rect.width < xMiddle)
+            if (o.Bounds.x < xMiddle && o.Bounds.x + o.Bounds.width < xMiddle)
             {
                 // ... same here
             }
             // Object can completely fit within the right quadrants
-            else if (rect.x > xMiddle)
+            else if (o.Bounds.x > xMiddle)
             {
                 // ... same here
             }
