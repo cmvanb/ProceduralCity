@@ -80,7 +80,7 @@ namespace AltSrc.UnityCommon.DataStructures
         }
 
         /// <summary>
-        ///   Retrieve a list of objects that fall within a rectangle.
+        ///   Retrieve a list of objects in the same node/subnodes as object o.
         /// </summary>
         public List<T> Retrieve(T o)
         {
