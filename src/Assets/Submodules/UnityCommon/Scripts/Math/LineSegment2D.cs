@@ -21,6 +21,15 @@ namespace AltSrc.UnityCommon.Math
             }
         }
 
+        // TODO: Consider optimizing this calculation by caching it. -Casper 2017-08-31
+        public float DirectionInDegrees
+        {
+            get
+            {
+                return Mathf.Atan2(PointB.y - PointA.y, PointB.x - PointA.x) * Mathf.Rad2Deg;
+            }
+        }
+
         public LineSegment2D(Vector2 pointA, Vector2 pointB)
         {
             this.PointA = pointA;
@@ -184,7 +193,7 @@ namespace AltSrc.UnityCommon.Math
         }
 
         /// <summary>
-        ///   ContainsPoint(): determine if a point is inside a segment
+        ///   Determine if a point is inside a segment
         ///       @param P - point
         ///       @param S - collinear segment
         ///       @returns - 0 = P is  not inside S
@@ -212,6 +221,19 @@ namespace AltSrc.UnityCommon.Math
             }
 
             return 0;
+        }
+
+        /// <summary>
+        ///   Calculate the smallest difference in angles between two line segments, in degrees.
+        ///       @param a - line segment
+        ///       @param b - line segment
+        ///       @returns - the smallest angle between the line segments
+        /// </summary>
+        public static float MinimumAngleDifferenceInDegrees(LineSegment2D a, LineSegment2D b)
+        {
+            float diff = Mathf.Abs(a.DirectionInDegrees - b.DirectionInDegrees) % 180f;
+
+            return Mathf.Min(diff, Mathf.Abs(diff - 180f));
         }
 
         private static float ArePerpindicular(Vector2 u, Vector2 v)

@@ -33,6 +33,9 @@ namespace AltSrc.ProceduralCity.Generation
         [SerializeField]
         public int MaxRoadSegments;
 
+        [SerializeField]
+        public float MinimumIntersectionAngleDifference;
+
         [MenuItem("Assets/Create/CityGeneratorRules")]
         public static void CreateAsset()
         {

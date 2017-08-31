@@ -2,6 +2,7 @@
 using UnityEngine;
 using Zenject;
 using AltSrc.UnityCommon.DataStructures;
+using AltSrc.UnityCommon.Math;
 using AltSrc.ProceduralCity.Generation.Roads;
 
 namespace AltSrc.ProceduralCity.Generation
@@ -26,6 +27,8 @@ namespace AltSrc.ProceduralCity.Generation
             // TODO: setup model with rules data
 
             // TODO: random seed
+
+            // TODO: Consider splitting out road generation into seperate function. -Casper 2017-08-17
 
             // create priority queue
             List<RoadSegment> priorityQueue = new List<RoadSegment>();
@@ -75,7 +78,7 @@ namespace AltSrc.ProceduralCity.Generation
                     }
                 }
 
-                // remove next segment from of queue
+                // remove next segment from queue
                 priorityQueue.Remove(nextSegment);
 
                 // validate segment passes local constraints
@@ -114,14 +117,76 @@ namespace AltSrc.ProceduralCity.Generation
             // TODO: generate view objects
         }
 
+        protected delegate bool ActionDelegate();
+
         protected bool CheckLocalConstraints(
             RoadSegment segment,
-            List<RoadSegment> segments,
+            List<RoadSegment> generatedSegments,
             QuadTree<RoadSegment> quadTree)
         {
-            List<RoadSegment> quadTreeMatches = quadTree.Retrieve(segment);
+            var actionPriority = 0;
+            ActionDelegate actionFunc = null;
 
-            // TODO: implement
+            List<RoadSegment> matches = quadTree.Retrieve(segment);
+
+            foreach (RoadSegment match in matches)
+            {
+                // intersection check
+                if (actionPriority <= 4)
+                {
+                    Vector2 intersectionPoint0, intersectionPoint1;
+                    int intersecting = LineSegment2D.CheckIntersection(
+                        segment.LineSegment2D,
+                        match.LineSegment2D,
+                        out intersectionPoint0,
+                        out intersectionPoint1);
+
+                    // 1 means the line segments intersect but don't overlap
+                    if (intersecting == 1)
+                    {
+                        actionPriority = 4;
+                        actionFunc = () =>
+                        {
+                            // if intersecting lines are too similar don't continue
+                            float differenceInDegrees = LineSegment2D.MinimumAngleDifferenceInDegrees(
+                                segment.LineSegment2D,
+                                match.LineSegment2D);
+
+                            if (differenceInDegrees < this.rules.MinimumIntersectionAngleDifference)
+                            {
+                                return false;
+                            }
+
+                            // perform split of intersecting segments
+                            RoadSegment splitSegment = null;
+                            match.Split(intersectionPoint0, segment, out splitSegment);
+                            segment.LineSegment2D = new LineSegment2D(
+                                segment.LineSegment2D.PointA,
+                                intersectionPoint0);
+                            segment.HasBeenSplit = true;
+
+                            // accept split segment into list and quad tree
+                            generatedSegments.Add(splitSegment);
+                            quadTree.Insert(splitSegment);
+
+                            return true;
+                        };
+                    }
+                }
+                // snap to crossing within radius check
+                if (actionPriority <= 3)
+                {
+                    // TODO: Implement. -Casper 2017-08-31
+                }
+                // intersection within radius check
+                if (actionPriority <= 2)
+                {
+                    // TODO: Implement. -Casper 2017-08-31
+                }
+            }
+
+            // TODO: Implement. -Casper 2017-08-31
+            // if (action.func) { action.func(); }
 
             return false;
         }
