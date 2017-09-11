@@ -157,6 +157,8 @@ namespace AltSrc.ProceduralCity.Generation
 
                             if (differenceInDegrees < this.rules.MinimumIntersectionAngleDifference)
                             {
+                                // TODO: This won't function correctly as it is based on coffeescript
+                                // functionality that differs from C#. -Casper 2017-09-11
                                 return false;
                             }
 
@@ -197,6 +199,8 @@ namespace AltSrc.ProceduralCity.Generation
                                 (x.PointA == segment.PointB && x.PointB == segment.PointA) ||
                                 (x.PointA == segment.PointA && x.PointB == segment.PointB)))
                             {
+                                // TODO: This won't function correctly as it is based on coffeescript
+                                // functionality that differs from C#. -Casper 2017-09-11
                                 return false;
                             }
 
@@ -252,6 +256,8 @@ namespace AltSrc.ProceduralCity.Generation
 
                             if (differenceInDegrees < this.rules.MinimumIntersectionAngleDifference)
                             {
+                                // TODO: This won't function correctly as it is based on coffeescript
+                                // functionality that differs from C#. -Casper 2017-09-11
                                 return false;
                             }
 
