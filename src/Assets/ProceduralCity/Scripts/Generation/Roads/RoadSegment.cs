@@ -39,10 +39,10 @@ namespace AltSrc.ProceduralCity.Generation.Roads
             this.HasBeenSplit = hasBeenSplit;
         }
 
-        public void Split(Vector2 point, RoadSegment other, out RoadSegment splitSegment)
+        public RoadSegment Split(Vector2 point, RoadSegment other)
         {
             // perform split
-            splitSegment = RoadSegment.FromExisting(this);
+            RoadSegment splitSegment = RoadSegment.FromExisting(this);
             splitSegment.LineSegment2D = new LineSegment2D(this.PointA, point);
             this.LineSegment2D = new LineSegment2D(point, this.PointB);
 
@@ -81,9 +81,11 @@ namespace AltSrc.ProceduralCity.Generation.Roads
 
             other.LinksForward.Add(firstSplit);
             other.LinksForward.Add(secondSplit);
+
+            return splitSegment;
         }
 
-        private bool StartIsBackwards()
+        public bool StartIsBackwards()
         {
             if (this.LinksBackward.Count > 0)
             {
@@ -93,6 +95,20 @@ namespace AltSrc.ProceduralCity.Generation.Roads
 
             return this.LinksForward[0].PointA == this.PointB
                 || this.LinksForward[0].PointB == this.PointB;
+        }
+
+        public List<RoadSegment> GetListOfLinksContainingSegment(RoadSegment segment)
+        {
+            if (this.LinksBackward.Contains(segment))
+            {
+                return this.LinksBackward;
+            }
+            else if (this.LinksForward.Contains(segment))
+            {
+                return this.LinksForward;
+            }
+
+            return null;
         }
 
         public static RoadSegment FromExisting(RoadSegment existingSegment)

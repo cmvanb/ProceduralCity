@@ -30,10 +30,23 @@ namespace AltSrc.UnityCommon.Math
             }
         }
 
+        public float Length
+        {
+            get
+            {
+                return this.ToVector2().magnitude;
+            }
+        }
+
         public LineSegment2D(Vector2 pointA, Vector2 pointB)
         {
             this.PointA = pointA;
             this.PointB = pointB;
+        }
+
+        public Vector2 ToVector2()
+        {
+            return PointB - PointA;
         }
 
         /// <summary>
@@ -236,9 +249,47 @@ namespace AltSrc.UnityCommon.Math
             return Mathf.Min(diff, Mathf.Abs(diff - 180f));
         }
 
-        private static float ArePerpindicular(Vector2 u, Vector2 v)
+        /// <summary>
+        ///   Calculate whether two vectors are perpindicular or not.
+        ///       @param u - point
+        ///       @param v - point
+        ///       @returns - true if u and v are perpindicular, otherwise false
+        /// </summary>
+        public static float ArePerpindicular(Vector2 u, Vector2 v)
         {
             return ((u).x * (v).y - (u).y * (v).x);
+        }
+
+        // TODO: Verify this function works as expected. -Casper 2017-09-11
+        /// <summary>
+        ///   Find the distance from a point to a line segment. This is done by projecting the vector
+        ///   from point to segment.PointA onto the line segment, then calculating the distance between
+        ///   the projected point and original point.
+        ///       @param segment - the line segment
+        ///       @param point - the point
+        ///       @out projectedPoint - vector point -> segment.PointA projected onto segment
+        ///       @out projectedLineLength - the length of vector point -> segment.PointA
+        ///       @returns the distance between point and projectedPoint
+        /// </summary>
+        public static float FindDistanceToPoint(
+            LineSegment2D segment,
+            Vector2 point,
+            out Vector2 projectedPoint,
+            out float projectedLineLength)
+        {
+            Vector2 segmentVector = segment.ToVector2();
+
+            Vector2 projectingVector = point - segment.PointA;
+
+            float dotProduct = Mathf.Infinity;
+
+            Vector2 projectedVector = segmentVector.Project(projectingVector, out dotProduct);
+
+            projectedPoint = segment.PointA + projectedVector;
+
+            projectedLineLength = projectedVector.magnitude;
+
+            return Vector2.Distance(projectedPoint, point);
         }
     }
 }

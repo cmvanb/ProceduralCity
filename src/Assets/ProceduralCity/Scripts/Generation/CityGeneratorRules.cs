@@ -36,6 +36,9 @@ namespace AltSrc.ProceduralCity.Generation
         [SerializeField]
         public float MinimumIntersectionAngleDifference;
 
+        [SerializeField]
+        public float RoadSnapDistance;
+
         [MenuItem("Assets/Create/CityGeneratorRules")]
         public static void CreateAsset()
         {

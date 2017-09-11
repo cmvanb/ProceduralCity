@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Zenject;
 using AltSrc.UnityCommon.DataStructures;
@@ -125,6 +126,7 @@ namespace AltSrc.ProceduralCity.Generation
             QuadTree<RoadSegment> quadTree)
         {
             var actionPriority = 0;
+
             ActionDelegate actionFunc = null;
 
             List<RoadSegment> matches = quadTree.Retrieve(segment);
@@ -135,6 +137,7 @@ namespace AltSrc.ProceduralCity.Generation
                 if (actionPriority <= 4)
                 {
                     Vector2 intersectionPoint0, intersectionPoint1;
+
                     int intersecting = LineSegment2D.CheckIntersection(
                         segment.LineSegment2D,
                         match.LineSegment2D,
@@ -158,8 +161,7 @@ namespace AltSrc.ProceduralCity.Generation
                             }
 
                             // perform split of intersecting segments
-                            RoadSegment splitSegment = null;
-                            match.Split(intersectionPoint0, segment, out splitSegment);
+                            RoadSegment splitSegment = match.Split(intersectionPoint0, segment);
                             segment.LineSegment2D = new LineSegment2D(
                                 segment.LineSegment2D.PointA,
                                 intersectionPoint0);
@@ -176,19 +178,97 @@ namespace AltSrc.ProceduralCity.Generation
                 // snap to crossing within radius check
                 if (actionPriority <= 3)
                 {
-                    // TODO: Implement. -Casper 2017-08-31
+                    float distance = Vector2.Distance(segment.PointB, match.PointB);
+
+                    if (distance <= this.rules.RoadSnapDistance)
+                    {
+                        actionPriority = 3;
+                        actionFunc = () =>
+                        {
+                            segment.LineSegment2D = new LineSegment2D(segment.PointA, match.PointB);
+                            segment.HasBeenSplit = true;
+
+                            // update links of match corresponding to match.PointB
+                            var links = match.StartIsBackwards() ? match.LinksForward : match.LinksBackward;
+
+                            // check for duplicate lines, don't add if it exists
+                            // this is done before links are setup, to avoid having to undo that step
+                            if (links.Any(x =>
+                                (x.PointA == segment.PointB && x.PointB == segment.PointA) ||
+                                (x.PointA == segment.PointA && x.PointB == segment.PointB)))
+                            {
+                                return false;
+                            }
+
+                            foreach (RoadSegment link in links)
+                            {
+                                var linksContainingMatch = link.GetListOfLinksContainingSegment(match);
+
+                                // pick links of remaining segments at junction corresponding to other.r.end
+                                if (linksContainingMatch != null)
+                                {
+                                    // TODO: Verify this works as expected (pass by ref). -Casper 2017-09-11
+                                    linksContainingMatch.Add(match);
+                                }
+
+                                // add junction segments to snapped segment
+                                segment.LinksForward.Add(link);
+                            }
+
+                            links.Add(segment);
+                            segment.LinksForward.Add(match);
+
+                            return true;
+                        };
+                    }
                 }
                 // intersection within radius check
                 if (actionPriority <= 2)
                 {
-                    // TODO: Implement. -Casper 2017-08-31
+                    Vector2 projectedPoint = Vector2.zero;
+
+                    float projectedLineLength = Mathf.Infinity;
+
+                    float distance = LineSegment2D.FindDistanceToPoint(
+                        match.LineSegment2D,
+                        segment.PointB,
+                        out projectedPoint,
+                        out projectedLineLength);
+
+                    if (distance < this.rules.RoadSnapDistance
+                        && projectedLineLength >= 0f
+                        && projectedLineLength <= match.LineSegment2D.Length)
+                    {
+                        actionPriority = 2;
+                        actionFunc = () =>
+                        {
+                            segment.LineSegment2D = new LineSegment2D(segment.PointA, projectedPoint);
+                            segment.HasBeenSplit = true;
+
+                            // if intersecting lines are too similar don't continue
+                            float differenceInDegrees = LineSegment2D.MinimumAngleDifferenceInDegrees(
+                                segment.LineSegment2D,
+                                match.LineSegment2D);
+
+                            if (differenceInDegrees < this.rules.MinimumIntersectionAngleDifference)
+                            {
+                                return false;
+                            }
+
+                            match.Split(projectedPoint, segment);
+
+                            return true;
+                        };
+                    }
                 }
             }
 
-            // TODO: Implement. -Casper 2017-08-31
-            // if (action.func) { action.func(); }
+            if (actionFunc != null)
+            {
+                actionFunc();
+            }
 
-            return false;
+            return true;
         }
 
         protected List<RoadSegment> GenerateNewSegmentsFromGlobalGoals(RoadSegment previousSegment)
