@@ -94,8 +94,8 @@ namespace AltSrc.ProceduralCity.Generation
                     generatedSegments.Add(nextSegment);
                     quadTree.Insert(nextSegment);
 
-                    // generate new segments and add to priority queue
-                    List<RoadSegment> newSegments = GenerateNewSegmentsFromGlobalGoals(nextSegment);
+                    // propose new segments based on global goals and add to priority queue
+                    List<RoadSegment> newSegments = ProposeNewSegmentsFromGlobalGoals(nextSegment);
 
                     foreach (RoadSegment s in newSegments)
                     {
@@ -125,7 +125,7 @@ namespace AltSrc.ProceduralCity.Generation
             List<RoadSegment> generatedSegments,
             QuadTree<RoadSegment> quadTree)
         {
-            var actionPriority = 0;
+            int actionPriority = 0;
 
             ActionDelegate actionFunc = null;
 
@@ -134,7 +134,7 @@ namespace AltSrc.ProceduralCity.Generation
             foreach (RoadSegment match in matches)
             {
                 // intersection check
-                if (actionPriority <= 4)
+                if (actionPriority <= 3)
                 {
                     Vector2 intersectionPoint0, intersectionPoint1;
 
@@ -147,7 +147,7 @@ namespace AltSrc.ProceduralCity.Generation
                     // 1 means the line segments intersect but don't overlap
                     if (intersecting == 1)
                     {
-                        actionPriority = 4;
+                        actionPriority = 3;
                         actionFunc = () =>
                         {
                             // if intersecting lines are too similar don't continue
@@ -157,8 +157,6 @@ namespace AltSrc.ProceduralCity.Generation
 
                             if (differenceInDegrees < this.rules.MinimumIntersectionAngleDifference)
                             {
-                                // TODO: This won't function correctly as it is based on coffeescript
-                                // functionality that differs from C#. -Casper 2017-09-11
                                 return false;
                             }
 
@@ -178,13 +176,13 @@ namespace AltSrc.ProceduralCity.Generation
                     }
                 }
                 // snap to crossing within radius check
-                if (actionPriority <= 3)
+                if (actionPriority <= 2)
                 {
                     float distance = Vector2.Distance(segment.PointB, match.PointB);
 
                     if (distance <= this.rules.RoadSnapDistance)
                     {
-                        actionPriority = 3;
+                        actionPriority = 2;
                         actionFunc = () =>
                         {
                             segment.LineSegment2D = new LineSegment2D(segment.PointA, match.PointB);
@@ -199,8 +197,6 @@ namespace AltSrc.ProceduralCity.Generation
                                 (x.PointA == segment.PointB && x.PointB == segment.PointA) ||
                                 (x.PointA == segment.PointA && x.PointB == segment.PointB)))
                             {
-                                // TODO: This won't function correctly as it is based on coffeescript
-                                // functionality that differs from C#. -Casper 2017-09-11
                                 return false;
                             }
 
@@ -227,7 +223,7 @@ namespace AltSrc.ProceduralCity.Generation
                     }
                 }
                 // intersection within radius check
-                if (actionPriority <= 2)
+                if (actionPriority <= 1)
                 {
                     Vector2 projectedPoint = Vector2.zero;
 
@@ -243,7 +239,7 @@ namespace AltSrc.ProceduralCity.Generation
                         && projectedLineLength >= 0f
                         && projectedLineLength <= match.LineSegment2D.Length)
                     {
-                        actionPriority = 2;
+                        actionPriority = 1;
                         actionFunc = () =>
                         {
                             segment.LineSegment2D = new LineSegment2D(segment.PointA, projectedPoint);
@@ -256,8 +252,6 @@ namespace AltSrc.ProceduralCity.Generation
 
                             if (differenceInDegrees < this.rules.MinimumIntersectionAngleDifference)
                             {
-                                // TODO: This won't function correctly as it is based on coffeescript
-                                // functionality that differs from C#. -Casper 2017-09-11
                                 return false;
                             }
 
@@ -271,17 +265,124 @@ namespace AltSrc.ProceduralCity.Generation
 
             if (actionFunc != null)
             {
-                actionFunc();
+                return actionFunc();
             }
 
             return true;
         }
 
-        protected List<RoadSegment> GenerateNewSegmentsFromGlobalGoals(RoadSegment previousSegment)
-        {
-            // TODO: implement
+        protected delegate RoadSegment RoadSegmentFactoryDelegate(float direction, float length);
 
-            return new List<RoadSegment>();
+        protected List<RoadSegment> ProposeNewSegmentsFromGlobalGoals(RoadSegment previousSegment)
+        {
+            List<RoadSegment> newBranches = new List<RoadSegment>();
+
+            if (!previousSegment.HasBeenSplit)
+            {
+
+                // NOTE: template, templateContinue, templateBranch, continueStraight are all functions -Casper 2017-09-12
+
+
+
+                /*
+                template = (direction, length, t, q) ->
+                    segmentFactory.usingDirection(previousSegment.r.end, direction, length, t, q);
+
+                // used for highways or going straight on a normal branch
+                templateContinue = _.partialRight(
+                    template,
+                    previousSegment.length(),
+                    0,
+                    previousSegment.q);
+
+                // not using q, i.e. not highways
+                float delayQ =
+                    previousSegment.q.highway == true ?
+                    config.mapGeneration.NORMAL_BRANCH_TIME_DELAY_FROM_HIGHWAY
+                    : 0;
+
+                templateBranch = _.partialRight(
+                    template,
+                    config.mapGeneration.DEFAULT_SEGMENT_LENGTH,
+                    delayQ);
+
+                continueStraight = templateContinue(previousSegment.dir())
+                */
+
+                /*
+                straightPop = heatmap.popOnRoad(continueStraight.r)
+
+                if (previousSegment.q.highway)
+                {
+                    var randomStraight = templateContinue(
+                        previousSegment.dir() + config.mapGeneration.RANDOM_STRAIGHT_ANGLE());
+
+                    var randomPop = heatmap.popOnRoad(randomStraight.r);
+
+                    var roadPop;
+
+                    if (randomPop > straightPop)
+                    {
+                        newBranches.push(randomStraight);
+                        roadPop = randomPop;
+                    }
+                    else
+                    {
+                        newBranches.push(continueStraight);
+                        roadPop = straightPop;
+                    }
+
+                    if (roadPop > config.mapGeneration.HIGHWAY_BRANCH_POPULATION_THRESHOLD)
+                    {
+                        if (Math.random() < config.mapGeneration.HIGHWAY_BRANCH_PROBABILITY)
+                        {
+                            leftHighwayBranch = templateContinue(previousSegment.dir() - 90 + config.mapGeneration.RANDOM_BRANCH_ANGLE())
+                            newBranches.push(leftHighwayBranch)
+                        }
+                        else if (Math.random() < config.mapGeneration.HIGHWAY_BRANCH_PROBABILITY)
+                        {
+                            rightHighwayBranch = templateContinue(previousSegment.dir() + 90 + config.mapGeneration.RANDOM_BRANCH_ANGLE())
+                            newBranches.push(rightHighwayBranch)
+                        }
+                    }
+
+
+                }
+                else if (straightPop > config.mapGeneration.NORMAL_BRANCH_POPULATION_THRESHOLD)
+                {
+                    newBranches.push(continueStraight)
+                }
+
+                if (straightPop > config.mapGeneration.NORMAL_BRANCH_POPULATION_THRESHOLD)
+                    if (Math.random() < config.mapGeneration.DEFAULT_BRANCH_PROBABILITY)
+                        leftBranch = templateBranch(previousSegment.dir() - 90 + config.mapGeneration.RANDOM_BRANCH_ANGLE())
+                        newBranches.push(leftBranch)
+                    else if (Math.random() < config.mapGeneration.DEFAULT_BRANCH_PROBABILITY)
+                        rightBranch = templateBranch(previousSegment.dir() + 90 + config.mapGeneration.RANDOM_BRANCH_ANGLE())
+                        newBranches.push(rightBranch)
+                    */
+            }
+
+
+
+
+            /*
+          for i in [0..newBranches.length-1] by 1
+            do (branch = newBranches[i]) ->
+              branch.setupBranchLinks = ->
+                # setup links between each current branch and each existing branch stemming from the previous segment
+                _.each(previousSegment.links.f, (link) ->
+                  @links.b.push(link)
+                  link.linksForEndContaining(previousSegment).push(this)
+                , @)
+
+                previousSegment.links.f.push(@)
+                @links.b.push(previousSegment)
+
+          return newBranches
+               */
+
+            return newBranches;
         }
     }
 }

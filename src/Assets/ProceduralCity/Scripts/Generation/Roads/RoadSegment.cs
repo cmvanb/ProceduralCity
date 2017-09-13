@@ -7,11 +7,11 @@ namespace AltSrc.ProceduralCity.Generation.Roads
 {
     public class RoadSegment : IBounds
     {
+        // TODO: Consider refactoring this variable out into CityGenerator. -Casper 2017-08-31
         /// <summary>
         ///   The closer Priority is to 0, the sooner this segment will be popped out of the queue
         ///   and used in CityGenerator.cs.
         /// </summary>
-        // TODO: Consider refactoring this variable out into CityGenerator. -Casper 2017-08-31
         public int Priority { get; set; }
         public bool HasBeenSplit { get; set; }
         public LineSegment2D LineSegment2D { get; set; }
@@ -119,6 +119,32 @@ namespace AltSrc.ProceduralCity.Generation.Roads
                 existingSegment.Priority,
                 existingSegment.RoadType,
                 existingSegment.HasBeenSplit);
+        }
+
+        /// <summary>
+        ///   Construct a new road segment from a point, direction and length.
+        ///       @param pointA - the first point in the new road segment
+        ///       @param angle - the direction in degrees
+        ///       @param length - the length of the new road segment
+        ///       @param priority - the priority of the road segment in CityGenerator.cs
+        ///       @param roadType - determines how this road will be rendered
+        /// </summary>
+        public static RoadSegment UsingDirection(
+            Vector2 pointA,
+            float angle,
+            float length,
+            int priority,
+            RoadType roadType,
+            bool hasBeenSplit)
+        {
+            Vector2 pointB = pointA + Vector2Utils.FromAngleMagnitude(angle, length);
+
+            return new RoadSegment(
+                pointA,
+                pointB,
+                priority,
+                roadType,
+                hasBeenSplit);
         }
     }
 }
