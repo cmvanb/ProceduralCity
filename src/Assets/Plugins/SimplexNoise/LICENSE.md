@@ -1,6 +1,6 @@
-Simplex Noise by Jasper Flick / Catlike Coding
-http://catlikecoding.com/unity/tutorials/
-https://web.archive.org/web/20170630211041/http://catlikecoding.com/unity/tutorials/
+Simplex Noise by Jasper Flick / Catlike Coding  
+http://catlikecoding.com/unity/tutorials/  
+https://web.archive.org/web/20170630211041/http://catlikecoding.com/unity/tutorials/  
 
 This code was retrieved from Mr. Flick's website on 2017-09-13 at which point in time the following license was provided:
 
