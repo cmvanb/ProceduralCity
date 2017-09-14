@@ -46,9 +46,9 @@ namespace AltSrc.ProceduralCity.Generation
 
         protected Texture2D GeneratePopulationHeatMap(CityGeneratorRules rules)
         {
-            if (rules.PopulationHeatMapTexture != null)
+            if (rules.PopulationHeatMap != null)
             {
-                return rules.PopulationHeatMapTexture;
+                return rules.PopulationHeatMap;
             }
 
             int width = MathUtils.RoundUpToNextPow2((int)(rules.CityBounds.width / 100));
@@ -127,7 +127,7 @@ namespace AltSrc.ProceduralCity.Generation
                     quadTree.Insert(nextSegment);
 
                     // propose new segments based on global goals and add to priority queue
-                    List<RoadSegment> newSegments = ProposeNewSegmentsFromGlobalGoals(nextSegment, populationHeatMap);
+                    List<RoadSegment> newSegments = ProposeNewSegmentsFromGlobalGoals(rules, nextSegment, populationHeatMap);
 
                     foreach (RoadSegment s in newSegments)
                     {
@@ -148,7 +148,7 @@ namespace AltSrc.ProceduralCity.Generation
 
             // TODO: add building rects to model
 
-            throw new NotImplementedException();
+            throw new System.NotImplementedException();
         }
 
         protected void BuildView()
@@ -157,10 +157,8 @@ namespace AltSrc.ProceduralCity.Generation
 
             // TODO: generate view objects
 
-            throw new NotImplementedException();
+            throw new System.NotImplementedException();
         }
-
-        protected delegate bool ActionDelegate();
 
         protected bool CheckLocalConstraints(
             CityGeneratorRules rules,
@@ -170,7 +168,7 @@ namespace AltSrc.ProceduralCity.Generation
         {
             int actionPriority = 0;
 
-            ActionDelegate actionFunc = null;
+            Func<bool> actionFunc = null;
 
             List<RoadSegment> matches = quadTree.Retrieve(segment);
 
@@ -315,98 +313,125 @@ namespace AltSrc.ProceduralCity.Generation
             return true;
         }
 
-        protected delegate RoadSegment RoadSegmentFactoryDelegate(float direction, float length);
-
-        protected List<RoadSegment> ProposeNewSegmentsFromGlobalGoals(RoadSegment previousSegment, Texture2D populationHeatMap)
+        protected List<RoadSegment> ProposeNewSegmentsFromGlobalGoals(
+            CityGeneratorRules rules, 
+            RoadSegment previousSegment, 
+            Texture2D populationHeatMap)
         {
             List<RoadSegment> newBranches = new List<RoadSegment>();
 
             if (!previousSegment.HasBeenSplit)
             {
-                // NOTE: template, templateContinue, templateBranch, continueStraight are all functions -Casper 2017-09-12
-
-                /*
-                template = (direction, length, t, q) ->
-                    segmentFactory.usingDirection(previousSegment.r.end, direction, length, t, q);
+                // template function for generating new segments based on previous segment
+                Func<float, float, int, RoadType, RoadSegment> template = 
+                    (float angle, float length, int priority, RoadType roadType) => 
+                    {
+                        return RoadSegment.UsingDirection(previousSegment.PointB, angle, length, priority, roadType, false);
+                    };
 
                 // used for highways or going straight on a normal branch
-                templateContinue = _.partialRight(
-                    template,
-                    previousSegment.length(),
-                    0,
-                    previousSegment.q);
-
-                // not using q, i.e. not highways
-                float delayQ =
-                    previousSegment.q.highway == true ?
-                    config.mapGeneration.NORMAL_BRANCH_TIME_DELAY_FROM_HIGHWAY
-                    : 0;
-
-                templateBranch = _.partialRight(
-                    template,
-                    config.mapGeneration.DEFAULT_SEGMENT_LENGTH,
-                    delayQ);
-
-                continueStraight = templateContinue(previousSegment.dir())
-                */
-
-                /*
-                straightPop = heatmap.popOnRoad(continueStraight.r)
-
-                if (previousSegment.q.highway)
-                {
-                    var randomStraight = templateContinue(
-                        previousSegment.dir() + config.mapGeneration.RANDOM_STRAIGHT_ANGLE());
-
-                    var randomPop = heatmap.popOnRoad(randomStraight.r);
-
-                    var roadPop;
-
-                    if (randomPop > straightPop)
+                Func<float, RoadSegment> templateContinue =
+                    (float angle) => 
                     {
-                        newBranches.push(randomStraight);
-                        roadPop = randomPop;
+                        return template(angle, previousSegment.LineSegment2D.Length, 0, previousSegment.RoadType);
+                    };
+
+                // used for branching roads - highway branches have a lower priority (higher value)
+                Func<float, RoadSegment> templateBranch =
+                    (float angle) => 
+                    {
+                        int priority = 
+                            previousSegment.RoadType == RoadType.Highway ? 
+                            rules.HighwayBranchPriority 
+                            : 0;
+
+                        return template(angle, rules.DefaultRoadLengths[RoadType.Normal], priority, RoadType.Normal);
+                    };
+
+                // basic continuing road
+                RoadSegment continueStraight = templateContinue(previousSegment.LineSegment2D.DirectionInDegrees);
+
+                // NOTE: previously named straightPop
+                float continueStraightPopulation = CalculatePopulationForRoad(populationHeatMap, rules.CityBounds, continueStraight);
+
+                // highway logic is more complex, can veer off by an angle and generate branches in 
+                // high population areas
+                if (previousSegment.RoadType == RoadType.Highway)
+                {
+                    // TODO: Calculate randomStraightAngle. See citygen config.coffee. -Casper 2017-09-14
+                    float randomStraightAngle = 0f;
+
+                    // basic road with random offset angle
+                    RoadSegment randomStraight = templateContinue(
+                        previousSegment.LineSegment2D.DirectionInDegrees + randomStraightAngle);
+
+                    float randomStraightPopulation = CalculatePopulationForRoad(populationHeatMap, rules.CityBounds, randomStraight);
+
+                    // choose between continuing straight and veering off by a random amount, based on
+                    // which road has access to more of the population
+                    float roadPopulation = 0f;
+
+                    if (randomStraightPopulation > continueStraightPopulation)
+                    {
+                        newBranches.Add(randomStraight);
+                        roadPopulation = randomStraightPopulation;
                     }
                     else
                     {
-                        newBranches.push(continueStraight);
-                        roadPop = straightPop;
+                        newBranches.Add(continueStraight);
+                        roadPopulation = continueStraightPopulation;
                     }
 
-                    if (roadPop > config.mapGeneration.HIGHWAY_BRANCH_POPULATION_THRESHOLD)
+                    // if the road population exceeds the necessary population threshold, generate 
+                    // a branch
+                    if (roadPopulation > rules.HighwayBranchPopulationThreshold
+                        && UnityEngine.Random.value < rules.HighwayBranchProbability)
                     {
-                        if (Math.random() < config.mapGeneration.HIGHWAY_BRANCH_PROBABILITY)
+                        // TODO: Calculate randomBranchAngle. See citygen config.coffee. -Casper 2017-09-14
+                        float randomBranchAngle = 0f;
+
+                        if (UnityEngine.Random.value < 0.5f)
                         {
-                            leftHighwayBranch = templateContinue(previousSegment.dir() - 90 + config.mapGeneration.RANDOM_BRANCH_ANGLE())
-                            newBranches.push(leftHighwayBranch)
+                            RoadSegment leftHighwayBranch = templateContinue(
+                                previousSegment.LineSegment2D.DirectionInDegrees - 90f + randomBranchAngle);
+                            newBranches.Add(leftHighwayBranch);
                         }
-                        else if (Math.random() < config.mapGeneration.HIGHWAY_BRANCH_PROBABILITY)
+                        else
                         {
-                            rightHighwayBranch = templateContinue(previousSegment.dir() + 90 + config.mapGeneration.RANDOM_BRANCH_ANGLE())
-                            newBranches.push(rightHighwayBranch)
+                            RoadSegment rightHighwayBranch = templateContinue(
+                                previousSegment.LineSegment2D.DirectionInDegrees + 90f + randomBranchAngle);
+                            newBranches.Add(rightHighwayBranch);
                         }
                     }
-
-
                 }
-                else if (straightPop > config.mapGeneration.NORMAL_BRANCH_POPULATION_THRESHOLD)
+                // non-highways are much simpler, just continue straight as long as the population 
+                // threshold is passed
+                else if (continueStraightPopulation > rules.NormalBranchPopulationThreshold)
                 {
-                    newBranches.push(continueStraight)
-                }
+                    newBranches.Add(continueStraight);
 
-                if (straightPop > config.mapGeneration.NORMAL_BRANCH_POPULATION_THRESHOLD)
-                    if (Math.random() < config.mapGeneration.DEFAULT_BRANCH_PROBABILITY)
-                        leftBranch = templateBranch(previousSegment.dir() - 90 + config.mapGeneration.RANDOM_BRANCH_ANGLE())
-                        newBranches.push(leftBranch)
-                    else if (Math.random() < config.mapGeneration.DEFAULT_BRANCH_PROBABILITY)
-                        rightBranch = templateBranch(previousSegment.dir() + 90 + config.mapGeneration.RANDOM_BRANCH_ANGLE())
-                        newBranches.push(rightBranch)
-                    */
+                    if (UnityEngine.Random.value < rules.NormalBranchProbability)
+                    {
+                        // TODO: Calculate randomBranchAngle. See citygen config.coffee. -Casper 2017-09-14
+                        float randomBranchAngle = 0f;
+
+                        if (UnityEngine.Random.value < 0.5f)
+                        {
+                            RoadSegment leftBranch = templateBranch(
+                                previousSegment.LineSegment2D.DirectionInDegrees - 90f + randomBranchAngle);
+                            newBranches.Add(leftBranch);
+                        }
+                        else
+                        {
+                            RoadSegment rightBranch = templateBranch(
+                                previousSegment.LineSegment2D.DirectionInDegrees + 90f + randomBranchAngle);
+                            newBranches.Add(rightBranch);
+                        }
+                    }
+                }
             }
 
-
-
-
+            // TODO: Implement. -Casper 2017-09-14
             /*
           for i in [0..newBranches.length-1] by 1
             do (branch = newBranches[i]) ->
@@ -419,11 +444,28 @@ namespace AltSrc.ProceduralCity.Generation
 
                 previousSegment.links.f.push(@)
                 @links.b.push(previousSegment)
-
-          return newBranches
                */
 
             return newBranches;
+        }
+
+        protected float CalculatePopulationForRoad(Texture2D heatMap, Rect cityBounds, RoadSegment segment)
+        {
+            return (GetPopulationAt(heatMap, cityBounds, segment.PointA) + GetPopulationAt(heatMap, cityBounds, segment.PointB)) / 2f;
+        }
+
+        protected float GetPopulationAt(Texture2D heatMap, Rect cityBounds, Vector2 position)
+        {
+            if (cityBounds.Contains(position))
+            {
+                Vector2 texturePosition = new Vector2(
+                    (position.x - cityBounds.x) / cityBounds.width,
+                    (position.y - cityBounds.y) / cityBounds.height);
+
+                return heatMap.GetPixel((int)texturePosition.x, (int)texturePosition.y).r;
+            }
+
+            return 0f;
         }
     }
 }

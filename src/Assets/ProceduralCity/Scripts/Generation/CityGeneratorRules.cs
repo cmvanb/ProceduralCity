@@ -40,7 +40,22 @@ namespace AltSrc.ProceduralCity.Generation
         public float RoadSnapDistance;
 
         [SerializeField]
-        public Texture2D PopulationHeatMapTexture;
+        public Texture2D PopulationHeatMap;
+
+        [SerializeField]
+        public int HighwayBranchPriority;
+
+        [SerializeField]
+        public float HighwayBranchPopulationThreshold;
+
+        [SerializeField]
+        public float HighwayBranchProbability;
+
+        [SerializeField]
+        public float NormalBranchPopulationThreshold;
+
+        [SerializeField]
+        public float NormalBranchProbability;
 
         [MenuItem("Assets/Create/CityGeneratorRules")]
         public static void CreateAsset()
