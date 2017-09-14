@@ -5,8 +5,7 @@ using UnityEditor;
 using UnityEditorInternal;
 using System.Collections.Generic;
 using System.Linq;
-
-using AltSrc.UnityCommon.Utils;
+using AltSrc.UnityCommon.Colors;
 
 namespace AltSrc.UnityCommon.Collections
 {

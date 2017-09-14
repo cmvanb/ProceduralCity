@@ -2,7 +2,7 @@
 
 using UnityEngine;
 
-namespace AltSrc.UnityCommon.Utils
+namespace AltSrc.UnityCommon.Colors
 {
     public static class ColorUtil
     {

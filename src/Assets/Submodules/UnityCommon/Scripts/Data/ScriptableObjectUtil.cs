@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEditor;
 using System.IO;
 
-namespace AltSrc.UnityCommon.Utils
+namespace AltSrc.UnityCommon.Data
 {
     /// <summary>
     ///   This makes it easy to create, name and place unique new ScriptableObject asset files.

@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEditor;
 using AltSrc.UnityCommon.Collections;
-using AltSrc.UnityCommon.Utils;
+using AltSrc.UnityCommon.Data;
 using AltSrc.ProceduralCity.Generation.Roads;
 
 namespace AltSrc.ProceduralCity.Generation
@@ -21,7 +21,7 @@ namespace AltSrc.ProceduralCity.Generation
         public DictionaryRoadTypeFloat DefaultRoadLengths = new DictionaryRoadTypeFloat();
 
         [SerializeField]
-        public Rect QuadTreeRect;
+        public Rect CityBounds;
 
         // TODO: Consider renaming var to QuadTreeMaxSegmentsPerNode. -Casper 2017-08-17
         [SerializeField]
@@ -38,6 +38,9 @@ namespace AltSrc.ProceduralCity.Generation
 
         [SerializeField]
         public float RoadSnapDistance;
+
+        [SerializeField]
+        public Texture2D PopulationHeatMapTexture;
 
         [MenuItem("Assets/Create/CityGeneratorRules")]
         public static void CreateAsset()

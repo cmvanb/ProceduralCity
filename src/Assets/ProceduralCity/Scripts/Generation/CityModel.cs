@@ -6,9 +6,11 @@ namespace AltSrc.ProceduralCity.Generation
 {
     public class CityModel
     {
-        public string CityName { get; private set; }
+        public string CityName { get; set; }
 
-        public List<RoadSegment> RoadSegments { get; private set; }
+        public List<RoadSegment> RoadSegments { get; set; }
+
+        public Texture2D PopulationHeatMap { get; set; }
 
         public CityModel()
         {

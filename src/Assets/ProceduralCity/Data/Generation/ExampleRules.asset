@@ -17,7 +17,7 @@ MonoBehaviour:
     _values:
     - 300
     - 400
-  QuadTreeRect:
+  CityBounds:
     serializedVersion: 2
     x: -20000
     y: -20000
@@ -26,3 +26,6 @@ MonoBehaviour:
   QuadTreeMaxObjectsPerNode: 8
   QuadTreeMaxDepth: 8
   MaxRoadSegments: 2000
+  MinimumIntersectionAngleDifference: 30
+  RoadSnapDistance: 50
+  PopulationHeatMapTexture: {fileID: 0}

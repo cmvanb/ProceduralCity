@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using CatlikeCoding.SimplexNoise;
 using Zenject;
 using AltSrc.UnityCommon.DataStructures;
 using AltSrc.UnityCommon.Math;
@@ -25,17 +27,46 @@ namespace AltSrc.ProceduralCity.Generation
         {
             Debug.Log("CityGenerator.Generate");
 
-            // TODO: setup model with rules data
+            // pass rules data to model
+            this.model.CityName = this.rules.CityName;
 
-            // TODO: random seed
+            // retrieve population heat map from rules (or if it is not provided, generate one)
+            // and pass to model
+            this.model.PopulationHeatMap = GeneratePopulationHeatMap(this.rules);
 
-            // TODO: Consider splitting out road generation into seperate function. -Casper 2017-08-17
+            // generate road segments and pass to model
+            this.model.RoadSegments = GenerateRoads(this.rules, this.model.PopulationHeatMap);
 
+            // TODO: Implement. -Casper 2017-09-14
+            //GenerateBuildings();
+
+            // TODO: Implement. -Casper 2017-09-14
+            //BuildView();
+        }
+
+        protected Texture2D GeneratePopulationHeatMap(CityGeneratorRules rules)
+        {
+            if (rules.PopulationHeatMapTexture != null)
+            {
+                return rules.PopulationHeatMapTexture;
+            }
+
+            int width = MathUtils.RoundUpToNextPow2((int)(rules.CityBounds.width / 100));
+            int height = MathUtils.RoundUpToNextPow2((int)(rules.CityBounds.height / 100));
+            int resolution = Mathf.Max(width, height);
+
+            Texture2D result = TextureCreator.Create(resolution);
+
+            return result;
+        }
+
+        protected List<RoadSegment> GenerateRoads(CityGeneratorRules rules, Texture2D populationHeatMap)
+        {
             // create priority queue
             List<RoadSegment> priorityQueue = new List<RoadSegment>();
 
             // setup root segments in opposing directions
-            var length = this.rules.DefaultRoadLengths[RoadType.Highway];
+            var length = rules.DefaultRoadLengths[RoadType.Highway];
             var rootSegment1 = new RoadSegment(
                 new Vector2(0f, 0f),
                 new Vector2(length, 0f),
@@ -55,19 +86,21 @@ namespace AltSrc.ProceduralCity.Generation
             priorityQueue.Add(rootSegment1);
             priorityQueue.Add(rootSegment2);
 
-            // create list and quadtree used to generate road segments
+            // list tracks segments that are generated and have passed local constraints function
             List<RoadSegment> generatedSegments = new List<RoadSegment>();
+
+            // quadtree is used by local contraints function to quickly find nearby segments 
             QuadTree<RoadSegment> quadTree = new QuadTree<RoadSegment>(
                 0,
-                this.rules.QuadTreeRect,
-                this.rules.QuadTreeMaxObjectsPerNode,
-                this.rules.QuadTreeMaxDepth);
+                rules.CityBounds,
+                rules.QuadTreeMaxObjectsPerNode,
+                rules.QuadTreeMaxDepth);
 
             // loop through priority queue until we hit a limit
             while (priorityQueue.Count > 0
-                && generatedSegments.Count < this.rules.MaxRoadSegments)
+                && generatedSegments.Count < rules.MaxRoadSegments)
             {
-                // find highest priority (lowest value) segment
+                // find highest priority (lowest value) segment and remove from queue
                 RoadSegment nextSegment = null;
 
                 foreach (RoadSegment s in priorityQueue)
@@ -79,23 +112,22 @@ namespace AltSrc.ProceduralCity.Generation
                     }
                 }
 
-                // remove next segment from queue
                 priorityQueue.Remove(nextSegment);
 
                 // validate segment passes local constraints
-                bool validSegment = CheckLocalConstraints(nextSegment, generatedSegments, quadTree);
+                bool validSegment = CheckLocalConstraints(rules, nextSegment, generatedSegments, quadTree);
 
                 if (validSegment)
                 {
                     // TODO: Implement RoadSegment.SetupBranchLinks
                     //nextSegment.SetupBranchLinks();
 
-                    // accept segment into list and quad tree
+                    // add segment to list and quad tree
                     generatedSegments.Add(nextSegment);
                     quadTree.Insert(nextSegment);
 
                     // propose new segments based on global goals and add to priority queue
-                    List<RoadSegment> newSegments = ProposeNewSegmentsFromGlobalGoals(nextSegment);
+                    List<RoadSegment> newSegments = ProposeNewSegmentsFromGlobalGoals(nextSegment, populationHeatMap);
 
                     foreach (RoadSegment s in newSegments)
                     {
@@ -107,20 +139,31 @@ namespace AltSrc.ProceduralCity.Generation
 
             Debug.Log(generatedSegments.Count + " segments generated.");
 
-            // TODO: add segments to model
+            return generatedSegments;
+        }
 
+        protected void GenerateBuildings()
+        {
             // TODO: generate building rects
 
             // TODO: add building rects to model
 
+            throw new NotImplementedException();
+        }
+
+        protected void BuildView()
+        {
             // TODO: hookup view with model
 
             // TODO: generate view objects
+
+            throw new NotImplementedException();
         }
 
         protected delegate bool ActionDelegate();
 
         protected bool CheckLocalConstraints(
+            CityGeneratorRules rules,
             RoadSegment segment,
             List<RoadSegment> generatedSegments,
             QuadTree<RoadSegment> quadTree)
@@ -155,7 +198,7 @@ namespace AltSrc.ProceduralCity.Generation
                                 segment.LineSegment2D,
                                 match.LineSegment2D);
 
-                            if (differenceInDegrees < this.rules.MinimumIntersectionAngleDifference)
+                            if (differenceInDegrees < rules.MinimumIntersectionAngleDifference)
                             {
                                 return false;
                             }
@@ -165,6 +208,7 @@ namespace AltSrc.ProceduralCity.Generation
                             segment.LineSegment2D = new LineSegment2D(
                                 segment.LineSegment2D.PointA,
                                 intersectionPoint0);
+
                             segment.HasBeenSplit = true;
 
                             // accept split segment into list and quad tree
@@ -180,7 +224,7 @@ namespace AltSrc.ProceduralCity.Generation
                 {
                     float distance = Vector2.Distance(segment.PointB, match.PointB);
 
-                    if (distance <= this.rules.RoadSnapDistance)
+                    if (distance <= rules.RoadSnapDistance)
                     {
                         actionPriority = 2;
                         actionFunc = () =>
@@ -235,7 +279,7 @@ namespace AltSrc.ProceduralCity.Generation
                         out projectedPoint,
                         out projectedLineLength);
 
-                    if (distance < this.rules.RoadSnapDistance
+                    if (distance < rules.RoadSnapDistance
                         && projectedLineLength >= 0f
                         && projectedLineLength <= match.LineSegment2D.Length)
                     {
@@ -250,7 +294,7 @@ namespace AltSrc.ProceduralCity.Generation
                                 segment.LineSegment2D,
                                 match.LineSegment2D);
 
-                            if (differenceInDegrees < this.rules.MinimumIntersectionAngleDifference)
+                            if (differenceInDegrees < rules.MinimumIntersectionAngleDifference)
                             {
                                 return false;
                             }
@@ -273,16 +317,13 @@ namespace AltSrc.ProceduralCity.Generation
 
         protected delegate RoadSegment RoadSegmentFactoryDelegate(float direction, float length);
 
-        protected List<RoadSegment> ProposeNewSegmentsFromGlobalGoals(RoadSegment previousSegment)
+        protected List<RoadSegment> ProposeNewSegmentsFromGlobalGoals(RoadSegment previousSegment, Texture2D populationHeatMap)
         {
             List<RoadSegment> newBranches = new List<RoadSegment>();
 
             if (!previousSegment.HasBeenSplit)
             {
-
                 // NOTE: template, templateContinue, templateBranch, continueStraight are all functions -Casper 2017-09-12
-
-
 
                 /*
                 template = (direction, length, t, q) ->

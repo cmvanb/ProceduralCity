@@ -23,7 +23,7 @@ namespace CatlikeCoding.SimplexNoise
         {
             if (Application.isPlaying)
             {
-                creator.FillTexture();
+                creator.UpdateTexture();
             }
         }
 
