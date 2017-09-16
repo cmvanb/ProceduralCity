@@ -18,6 +18,9 @@ namespace AltSrc.ProceduralCity.Generation
         public string CityName;
 
         [SerializeField]
+        public float DefaultRoadWidth;
+
+        [SerializeField]
         public DictionaryRoadTypeFloat DefaultRoadLengths = new DictionaryRoadTypeFloat();
 
         [SerializeField]
@@ -56,6 +59,12 @@ namespace AltSrc.ProceduralCity.Generation
 
         [SerializeField]
         public float NormalBranchProbability;
+
+        [SerializeField]
+        public float StraightRoadMaxDeviationAngle;
+
+        [SerializeField]
+        public float BranchRoadMaxDeviationAngle;
 
         [MenuItem("Assets/Create/CityGeneratorRules")]
         public static void CreateAsset()

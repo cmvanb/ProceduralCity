@@ -151,7 +151,16 @@ namespace CatlikeCoding.SimplexNoise
             result.filterMode = FilterMode.Trilinear;
             result.anisoLevel = 9;
 
-            FillTextureWithNoise(result);
+            FillTextureWithNoise(
+                result,
+                resolution,
+                frequency,
+                octaves,
+                lacunarity,
+                persistence,
+                dimensions,
+                type,
+                coloring);
 
             return result;
         }

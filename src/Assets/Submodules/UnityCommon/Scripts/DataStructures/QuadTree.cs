@@ -88,7 +88,7 @@ namespace AltSrc.UnityCommon.DataStructures
             int index = GetIndex(o);
 
             if (index != -1
-                && this.nodes[0] == null)
+                && this.nodes[0] != null)
             {
                 retrieved.AddRange(this.nodes[index].Retrieve(o));
             }

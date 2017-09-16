@@ -42,6 +42,8 @@ namespace AltSrc.ProceduralCity.Generation
 
             // TODO: Implement. -Casper 2017-09-14
             //BuildView();
+
+            BuildDebugView(this.rules, this.model);
         }
 
         protected Texture2D GeneratePopulationHeatMap(CityGeneratorRules rules)
@@ -60,6 +62,7 @@ namespace AltSrc.ProceduralCity.Generation
             return result;
         }
 
+        // TODO: Consider extracting road generation algorithm to a class. -Casper 2017-09-15
         protected List<RoadSegment> GenerateRoads(CityGeneratorRules rules, Texture2D populationHeatMap)
         {
             // create priority queue
@@ -100,11 +103,15 @@ namespace AltSrc.ProceduralCity.Generation
             while (priorityQueue.Count > 0
                 && generatedSegments.Count < rules.MaxRoadSegments)
             {
+                Debug.Log("priorityQueue contents:");
+
                 // find highest priority (lowest value) segment and remove from queue
                 RoadSegment nextSegment = null;
 
                 foreach (RoadSegment s in priorityQueue)
                 {
+                    Debug.Log(s.ToString());
+
                     if (nextSegment == null
                         || s.Priority < nextSegment.Priority)
                     {
@@ -119,6 +126,8 @@ namespace AltSrc.ProceduralCity.Generation
 
                 if (validSegment)
                 {
+                    Debug.Log(nextSegment.ToString() + " passed local constraints check");
+
                     // TODO: Implement RoadSegment.SetupBranchLinks
                     //nextSegment.SetupBranchLinks();
 
@@ -129,10 +138,13 @@ namespace AltSrc.ProceduralCity.Generation
                     // propose new segments based on global goals and add to priority queue
                     List<RoadSegment> newSegments = ProposeNewSegmentsFromGlobalGoals(rules, nextSegment, populationHeatMap);
 
+                    Debug.Log("proposed " + newSegments.Count + " new segments based on passing segment");
+
                     foreach (RoadSegment s in newSegments)
                     {
+                        Debug.Log(s.ToString());
                         s.Priority += nextSegment.Priority + 1;
-                        priorityQueue.Add(nextSegment);
+                        priorityQueue.Add(s);
                     }
                 }
             }
@@ -148,7 +160,7 @@ namespace AltSrc.ProceduralCity.Generation
 
             // TODO: add building rects to model
 
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         protected void BuildView()
@@ -157,7 +169,42 @@ namespace AltSrc.ProceduralCity.Generation
 
             // TODO: generate view objects
 
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
+        }
+
+        protected void BuildDebugView(CityGeneratorRules rules, CityModel model)
+        {
+            // build population heatmap quad
+            GameObject heatMapQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            heatMapQuad.transform.localScale = new Vector3(rules.CityBounds.width, rules.CityBounds.height, 1f);
+            heatMapQuad.transform.eulerAngles = new Vector3(90f, 0f, 0f);
+            heatMapQuad.GetComponent<Renderer>().material = new Material(Shader.Find("Unlit/Texture"));
+            heatMapQuad.GetComponent<Renderer>().material.mainTexture = model.PopulationHeatMap;
+
+            // build road segments
+            Material highwayMaterial = new Material(Shader.Find("Unlit/Color"));
+            highwayMaterial.color = Color.red;
+            Material normalMaterial = new Material(Shader.Find("Unlit/Color"));
+            normalMaterial.color = Color.blue;
+
+            foreach (RoadSegment segment in model.RoadSegments)
+            {
+                // build road segment
+                GameObject segmentQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                var midPoint = segment.LineSegment2D.MidPoint;
+                segmentQuad.transform.position = new Vector3(midPoint.x, 0.01f, midPoint.y);
+                segmentQuad.transform.localScale = new Vector3(segment.LineSegment2D.Length, rules.DefaultRoadWidth, 1f);
+                segmentQuad.transform.eulerAngles = new Vector3(90f, segment.LineSegment2D.DirectionInDegrees, 0f);
+
+                if (segment.RoadType == RoadType.Highway)
+                {
+                    segmentQuad.GetComponent<Renderer>().material = highwayMaterial;
+                }
+                else if (segment.RoadType == RoadType.Normal)
+                {
+                    segmentQuad.GetComponent<Renderer>().material = normalMaterial;
+                }
+            }
         }
 
         protected bool CheckLocalConstraints(
@@ -186,7 +233,9 @@ namespace AltSrc.ProceduralCity.Generation
                         out intersectionPoint1);
 
                     // 1 means the line segments intersect but don't overlap
-                    if (intersecting == 1)
+                    if (intersecting == 1
+                        && intersectionPoint0 != segment.LineSegment2D.PointA
+                        && intersectionPoint0 != segment.LineSegment2D.PointB)
                     {
                         actionPriority = 3;
                         actionFunc = () =>
@@ -198,6 +247,8 @@ namespace AltSrc.ProceduralCity.Generation
 
                             if (differenceInDegrees < rules.MinimumIntersectionAngleDifference)
                             {
+                                Debug.Log("proposed segment [" + segment.ToString() + "] discarded by intersection check (#1)");
+                                Debug.Log(differenceInDegrees);
                                 return false;
                             }
 
@@ -230,6 +281,8 @@ namespace AltSrc.ProceduralCity.Generation
                             segment.LineSegment2D = new LineSegment2D(segment.PointA, match.PointB);
                             segment.HasBeenSplit = true;
 
+                            // NOTE: The following code appears to be the reason for all the links bookkeeping... -Casper 2017-09-15
+
                             // update links of match corresponding to match.PointB
                             var links = match.StartIsBackwards() ? match.LinksForward : match.LinksBackward;
 
@@ -239,6 +292,7 @@ namespace AltSrc.ProceduralCity.Generation
                                 (x.PointA == segment.PointB && x.PointB == segment.PointA) ||
                                 (x.PointA == segment.PointA && x.PointB == segment.PointB)))
                             {
+                                Debug.Log("proposed segment [" + segment.ToString() + "] discarded by snap to crossing check (#2)");
                                 return false;
                             }
 
@@ -294,6 +348,7 @@ namespace AltSrc.ProceduralCity.Generation
 
                             if (differenceInDegrees < rules.MinimumIntersectionAngleDifference)
                             {
+                                Debug.Log("proposed segment [" + segment.ToString() + "] discarded by intersection within radius check (#3)");
                                 return false;
                             }
 
@@ -358,8 +413,7 @@ namespace AltSrc.ProceduralCity.Generation
                 // high population areas
                 if (previousSegment.RoadType == RoadType.Highway)
                 {
-                    // TODO: Calculate randomStraightAngle. See citygen config.coffee. -Casper 2017-09-14
-                    float randomStraightAngle = 0f;
+                    float randomStraightAngle = GetRandomStraightAngle(rules);
 
                     // basic road with random offset angle
                     RoadSegment randomStraight = templateContinue(
@@ -387,8 +441,7 @@ namespace AltSrc.ProceduralCity.Generation
                     if (roadPopulation > rules.HighwayBranchPopulationThreshold
                         && UnityEngine.Random.value < rules.HighwayBranchProbability)
                     {
-                        // TODO: Calculate randomBranchAngle. See citygen config.coffee. -Casper 2017-09-14
-                        float randomBranchAngle = 0f;
+                        float randomBranchAngle = GetRandomBranchAngle(rules);
 
                         if (UnityEngine.Random.value < 0.5f)
                         {
@@ -412,8 +465,7 @@ namespace AltSrc.ProceduralCity.Generation
 
                     if (UnityEngine.Random.value < rules.NormalBranchProbability)
                     {
-                        // TODO: Calculate randomBranchAngle. See citygen config.coffee. -Casper 2017-09-14
-                        float randomBranchAngle = 0f;
+                        float randomBranchAngle = GetRandomBranchAngle(rules);
 
                         if (UnityEngine.Random.value < 0.5f)
                         {
@@ -466,6 +518,16 @@ namespace AltSrc.ProceduralCity.Generation
             }
 
             return 0f;
+        }
+
+        protected float GetRandomStraightAngle(CityGeneratorRules rules)
+        {
+            return UnityEngine.Random.Range(-rules.StraightRoadMaxDeviationAngle, rules.StraightRoadMaxDeviationAngle);
+        }
+
+        protected float GetRandomBranchAngle(CityGeneratorRules rules)
+        {
+            return UnityEngine.Random.Range(-rules.BranchRoadMaxDeviationAngle, rules.BranchRoadMaxDeviationAngle);
         }
     }
 }

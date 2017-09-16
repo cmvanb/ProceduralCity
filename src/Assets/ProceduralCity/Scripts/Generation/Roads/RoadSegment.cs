@@ -92,9 +92,13 @@ namespace AltSrc.ProceduralCity.Generation.Roads
                 return this.LinksBackward[0].PointA == this.PointA
                     || this.LinksBackward[0].PointB == this.PointA;
             }
+            else if (this.LinksForward.Count > 0)
+            {
+                return this.LinksForward[0].PointA == this.PointB
+                    || this.LinksForward[0].PointB == this.PointB;
+            }
 
-            return this.LinksForward[0].PointA == this.PointB
-                || this.LinksForward[0].PointB == this.PointB;
+            return false;
         }
 
         public List<RoadSegment> GetListOfLinksContainingSegment(RoadSegment segment)
@@ -109,6 +113,14 @@ namespace AltSrc.ProceduralCity.Generation.Roads
             }
 
             return null;
+        }
+
+        public override string ToString()
+        {
+            return 
+                this.PointA.ToString() + " to " + this.PointB.ToString() 
+                + ", Length is " + this.LineSegment2D.Length 
+                + ", Direction is " + this.LineSegment2D.DirectionInDegrees;
         }
 
         public static RoadSegment FromExisting(RoadSegment existingSegment)

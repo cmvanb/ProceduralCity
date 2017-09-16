@@ -38,6 +38,14 @@ namespace AltSrc.UnityCommon.Math
             }
         }
 
+        public Vector2 MidPoint
+        {
+            get
+            {
+                return (PointA + PointB) / 2f;
+            }
+        }
+
         public LineSegment2D(Vector2 pointA, Vector2 pointB)
         {
             this.PointA = pointA;

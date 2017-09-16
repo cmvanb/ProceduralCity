@@ -12,20 +12,28 @@ MonoBehaviour:
   m_Name: ExampleRules
   m_EditorClassIdentifier: 
   CityName: Example City
+  DefaultRoadWidth: 10
   DefaultRoadLengths:
     _keys: 0000000001000000
     _values:
-    - 300
-    - 400
+    - 75
+    - 100
   CityBounds:
     serializedVersion: 2
-    x: -20000
-    y: -20000
-    width: 40000
-    height: 40000
+    x: -5000
+    y: -5000
+    width: 10000
+    height: 10000
   QuadTreeMaxObjectsPerNode: 8
   QuadTreeMaxDepth: 8
   MaxRoadSegments: 2000
   MinimumIntersectionAngleDifference: 30
-  RoadSnapDistance: 50
-  PopulationHeatMapTexture: {fileID: 0}
+  RoadSnapDistance: 12
+  PopulationHeatMap: {fileID: 0}
+  HighwayBranchPriority: 5
+  HighwayBranchPopulationThreshold: 0.1
+  HighwayBranchProbability: 0.05
+  NormalBranchPopulationThreshold: 0.1
+  NormalBranchProbability: 0.4
+  StraightRoadMaxDeviationAngle: 3
+  BranchRoadMaxDeviationAngle: 15
