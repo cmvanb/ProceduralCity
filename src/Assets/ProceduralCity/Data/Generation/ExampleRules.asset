@@ -26,14 +26,14 @@ MonoBehaviour:
     height: 10000
   QuadTreeMaxObjectsPerNode: 8
   QuadTreeMaxDepth: 8
-  MaxRoadSegments: 2000
-  MinimumIntersectionAngleDifference: 30
-  RoadSnapDistance: 12
-  PopulationHeatMap: {fileID: 0}
+  MaxRoadSegments: 400
+  MinimumIntersectionAngleDifference: 40
+  RoadSnapDistance: 3
+  PopulationHeatMap: {fileID: 2800000, guid: 222459d30414b014184ebdd4152149f1, type: 3}
   HighwayBranchPriority: 5
   HighwayBranchPopulationThreshold: 0.1
-  HighwayBranchProbability: 0.05
-  NormalBranchPopulationThreshold: 0.1
-  NormalBranchProbability: 0.4
+  HighwayBranchProbability: 0.1
+  NormalBranchPopulationThreshold: 0.2
+  NormalBranchProbability: 0.2
   StraightRoadMaxDeviationAngle: 3
   BranchRoadMaxDeviationAngle: 15

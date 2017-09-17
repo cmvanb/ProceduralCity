@@ -15,8 +15,10 @@ namespace AltSrc.ProceduralCity.Generation.Roads
         public int Priority { get; set; }
         public bool HasBeenSplit { get; set; }
         public LineSegment2D LineSegment2D { get; set; }
+        /*
         public List<RoadSegment> LinksForward { get; set; }
         public List<RoadSegment> LinksBackward { get; set; }
+        */
 
         public Vector2 PointA { get { return this.LineSegment2D.PointA; } }
         public Vector2 PointB { get { return this.LineSegment2D.PointB; } }
@@ -33,8 +35,10 @@ namespace AltSrc.ProceduralCity.Generation.Roads
         {
             this.LineSegment2D = new LineSegment2D(pointA, pointB);
             this.Priority = priority;
+            /*
             this.LinksForward = new List<RoadSegment>();
             this.LinksBackward = new List<RoadSegment>();
+            */
             this.RoadType = roadType;
             this.HasBeenSplit = hasBeenSplit;
         }
@@ -46,6 +50,7 @@ namespace AltSrc.ProceduralCity.Generation.Roads
             splitSegment.LineSegment2D = new LineSegment2D(this.PointA, point);
             this.LineSegment2D = new LineSegment2D(point, this.PointB);
 
+            /*
             // links are not copied by RoadSegment.FromExisting(), so copy them over into new lists
             splitSegment.LinksBackward = new List<RoadSegment>(this.LinksBackward);
             splitSegment.LinksForward = new List<RoadSegment>(this.LinksForward);
@@ -81,10 +86,12 @@ namespace AltSrc.ProceduralCity.Generation.Roads
 
             other.LinksForward.Add(firstSplit);
             other.LinksForward.Add(secondSplit);
+            */
 
             return splitSegment;
         }
 
+        /*
         public bool StartIsBackwards()
         {
             if (this.LinksBackward.Count > 0)
@@ -114,13 +121,15 @@ namespace AltSrc.ProceduralCity.Generation.Roads
 
             return null;
         }
+        */
 
         public override string ToString()
         {
             return 
                 this.PointA.ToString() + " to " + this.PointB.ToString() 
-                + ", Length is " + this.LineSegment2D.Length 
-                + ", Direction is " + this.LineSegment2D.DirectionInDegrees;
+                + ", L: " + this.LineSegment2D.Length 
+                + ", D: " + this.LineSegment2D.DirectionInDegrees
+                + ", R: " + this.RoadType;
         }
 
         public static RoadSegment FromExisting(RoadSegment existingSegment)
@@ -149,7 +158,7 @@ namespace AltSrc.ProceduralCity.Generation.Roads
             RoadType roadType,
             bool hasBeenSplit)
         {
-            Vector2 pointB = pointA + Vector2Utils.FromAngleMagnitude(angle, length);
+            Vector2 pointB = pointA + Vector2Utils.FromAngleInDegreesAndMagnitude(angle, length);
 
             return new RoadSegment(
                 pointA,

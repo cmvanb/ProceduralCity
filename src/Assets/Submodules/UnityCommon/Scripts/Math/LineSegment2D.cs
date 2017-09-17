@@ -26,7 +26,8 @@ namespace AltSrc.UnityCommon.Math
         {
             get
             {
-                return Mathf.Atan2(PointB.y - PointA.y, PointB.x - PointA.x) * Mathf.Rad2Deg;
+                //return Vector2.Angle(PointA, PointB);
+                return 180f - (Mathf.Atan2(PointB.y - PointA.y, PointB.x - PointA.x) * Mathf.Rad2Deg);
             }
         }
 

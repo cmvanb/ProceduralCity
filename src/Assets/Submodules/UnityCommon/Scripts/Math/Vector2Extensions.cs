@@ -25,6 +25,16 @@ namespace AltSrc.UnityCommon.Math
         {
             return new Vector2(v.x * scalar, v.y * scalar);
         }
+
+        public static Vector3 ToVec3XY(this Vector2 v)
+        {
+            return new Vector3(v.x, v.y, 0f);
+        }
+
+        public static Vector3 ToVec3XZ(this Vector2 v)
+        {
+            return new Vector3(v.x, 0f, v.y);
+        }
     }
 }
 

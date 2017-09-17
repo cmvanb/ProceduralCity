@@ -82,8 +82,8 @@ namespace AltSrc.ProceduralCity.Generation
                 RoadType.Highway);
 
             // link root segments to each other
-            rootSegment1.LinksBackward.Add(rootSegment2);
-            rootSegment2.LinksBackward.Add(rootSegment1);
+            //rootSegment1.LinksBackward.Add(rootSegment2);
+            //rootSegment2.LinksBackward.Add(rootSegment1);
 
             // add root segments to priority queue
             priorityQueue.Add(rootSegment1);
@@ -103,15 +103,11 @@ namespace AltSrc.ProceduralCity.Generation
             while (priorityQueue.Count > 0
                 && generatedSegments.Count < rules.MaxRoadSegments)
             {
-                Debug.Log("priorityQueue contents:");
-
                 // find highest priority (lowest value) segment and remove from queue
                 RoadSegment nextSegment = null;
 
                 foreach (RoadSegment s in priorityQueue)
                 {
-                    Debug.Log(s.ToString());
-
                     if (nextSegment == null
                         || s.Priority < nextSegment.Priority)
                     {
@@ -126,8 +122,6 @@ namespace AltSrc.ProceduralCity.Generation
 
                 if (validSegment)
                 {
-                    Debug.Log(nextSegment.ToString() + " passed local constraints check");
-
                     // TODO: Implement RoadSegment.SetupBranchLinks
                     //nextSegment.SetupBranchLinks();
 
@@ -138,11 +132,8 @@ namespace AltSrc.ProceduralCity.Generation
                     // propose new segments based on global goals and add to priority queue
                     List<RoadSegment> newSegments = ProposeNewSegmentsFromGlobalGoals(rules, nextSegment, populationHeatMap);
 
-                    Debug.Log("proposed " + newSegments.Count + " new segments based on passing segment");
-
                     foreach (RoadSegment s in newSegments)
                     {
-                        Debug.Log(s.ToString());
                         s.Priority += nextSegment.Priority + 1;
                         priorityQueue.Add(s);
                     }
@@ -174,12 +165,15 @@ namespace AltSrc.ProceduralCity.Generation
 
         protected void BuildDebugView(CityGeneratorRules rules, CityModel model)
         {
+            GameObject debugView = new GameObject("DebugView");
+
             // build population heatmap quad
             GameObject heatMapQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
             heatMapQuad.transform.localScale = new Vector3(rules.CityBounds.width, rules.CityBounds.height, 1f);
             heatMapQuad.transform.eulerAngles = new Vector3(90f, 0f, 0f);
             heatMapQuad.GetComponent<Renderer>().material = new Material(Shader.Find("Unlit/Texture"));
             heatMapQuad.GetComponent<Renderer>().material.mainTexture = model.PopulationHeatMap;
+            heatMapQuad.transform.parent = debugView.transform;
 
             // build road segments
             Material highwayMaterial = new Material(Shader.Find("Unlit/Color"));
@@ -191,10 +185,23 @@ namespace AltSrc.ProceduralCity.Generation
             {
                 // build road segment
                 GameObject segmentQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                segmentQuad.name = segment.ToString();
                 var midPoint = segment.LineSegment2D.MidPoint;
                 segmentQuad.transform.position = new Vector3(midPoint.x, 0.01f, midPoint.y);
                 segmentQuad.transform.localScale = new Vector3(segment.LineSegment2D.Length, rules.DefaultRoadWidth, 1f);
                 segmentQuad.transform.eulerAngles = new Vector3(90f, segment.LineSegment2D.DirectionInDegrees, 0f);
+
+                GameObject markerA = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                markerA.name = segment.PointA.ToString() + ", Pop: " 
+                    + GetPopulationAt(rules.PopulationHeatMap, rules.CityBounds, segment.PointA).ToString();
+                markerA.transform.parent = segmentQuad.transform;
+                markerA.transform.position = segment.PointA.ToVec3XZ();
+
+                GameObject markerB = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                markerB.name = segment.PointB.ToString() + ", Pop: "
+                    + GetPopulationAt(rules.PopulationHeatMap, rules.CityBounds, segment.PointB).ToString();
+                markerB.transform.parent = segmentQuad.transform;
+                markerB.transform.position = segment.PointB.ToVec3XZ();
 
                 if (segment.RoadType == RoadType.Highway)
                 {
@@ -204,6 +211,8 @@ namespace AltSrc.ProceduralCity.Generation
                 {
                     segmentQuad.GetComponent<Renderer>().material = normalMaterial;
                 }
+
+                segmentQuad.transform.parent = debugView.transform;
             }
         }
 
@@ -234,8 +243,8 @@ namespace AltSrc.ProceduralCity.Generation
 
                     // 1 means the line segments intersect but don't overlap
                     if (intersecting == 1
-                        && intersectionPoint0 != segment.LineSegment2D.PointA
-                        && intersectionPoint0 != segment.LineSegment2D.PointB)
+                        && intersectionPoint0 != segment.PointA
+                        && intersectionPoint0 != segment.PointB)
                     {
                         actionPriority = 3;
                         actionFunc = () =>
@@ -247,15 +256,13 @@ namespace AltSrc.ProceduralCity.Generation
 
                             if (differenceInDegrees < rules.MinimumIntersectionAngleDifference)
                             {
-                                Debug.Log("proposed segment [" + segment.ToString() + "] discarded by intersection check (#1)");
-                                Debug.Log(differenceInDegrees);
                                 return false;
                             }
 
                             // perform split of intersecting segments
                             RoadSegment splitSegment = match.Split(intersectionPoint0, segment);
                             segment.LineSegment2D = new LineSegment2D(
-                                segment.LineSegment2D.PointA,
+                                segment.PointA,
                                 intersectionPoint0);
 
                             segment.HasBeenSplit = true;
@@ -278,11 +285,20 @@ namespace AltSrc.ProceduralCity.Generation
                         actionPriority = 2;
                         actionFunc = () =>
                         {
+                            if (matches.Any(x =>
+                                (x.PointA == segment.PointB && x.PointB == segment.PointA) ||
+                                (x.PointA == segment.PointA && x.PointB == segment.PointB)))
+                            {
+                                Debug.Log("proposed segment [" + segment.ToString() + "] discarded by snap to crossing check (#2)");
+                                return false;
+                            }
+
                             segment.LineSegment2D = new LineSegment2D(segment.PointA, match.PointB);
                             segment.HasBeenSplit = true;
 
                             // NOTE: The following code appears to be the reason for all the links bookkeeping... -Casper 2017-09-15
 
+                            /*
                             // update links of match corresponding to match.PointB
                             var links = match.StartIsBackwards() ? match.LinksForward : match.LinksBackward;
 
@@ -298,13 +314,13 @@ namespace AltSrc.ProceduralCity.Generation
 
                             foreach (RoadSegment link in links)
                             {
+                                // pick links of remaining segments at junction corresponding to other.r.end
                                 var linksContainingMatch = link.GetListOfLinksContainingSegment(match);
 
-                                // pick links of remaining segments at junction corresponding to other.r.end
                                 if (linksContainingMatch != null)
                                 {
                                     // TODO: Verify this works as expected (pass by ref). -Casper 2017-09-11
-                                    linksContainingMatch.Add(match);
+                                    linksContainingMatch.Add(segment);
                                 }
 
                                 // add junction segments to snapped segment
@@ -313,6 +329,7 @@ namespace AltSrc.ProceduralCity.Generation
 
                             links.Add(segment);
                             segment.LinksForward.Add(match);
+                            */
 
                             return true;
                         };
@@ -425,7 +442,7 @@ namespace AltSrc.ProceduralCity.Generation
                     // which road has access to more of the population
                     float roadPopulation = 0f;
 
-                    if (randomStraightPopulation > continueStraightPopulation)
+                    if (randomStraightPopulation >= continueStraightPopulation)
                     {
                         newBranches.Add(randomStraight);
                         roadPopulation = randomStraightPopulation;
@@ -462,7 +479,10 @@ namespace AltSrc.ProceduralCity.Generation
                 else if (continueStraightPopulation > rules.NormalBranchPopulationThreshold)
                 {
                     newBranches.Add(continueStraight);
+                }
 
+                if (continueStraightPopulation > rules.NormalBranchPopulationThreshold)
+                {
                     if (UnityEngine.Random.value < rules.NormalBranchProbability)
                     {
                         float randomBranchAngle = GetRandomBranchAngle(rules);
@@ -483,24 +503,31 @@ namespace AltSrc.ProceduralCity.Generation
                 }
             }
 
-            // TODO: Implement. -Casper 2017-09-14
             /*
-          for i in [0..newBranches.length-1] by 1
-            do (branch = newBranches[i]) ->
-              branch.setupBranchLinks = ->
-                # setup links between each current branch and each existing branch stemming from the previous segment
-                _.each(previousSegment.links.f, (link) ->
-                  @links.b.push(link)
-                  link.linksForEndContaining(previousSegment).push(this)
-                , @)
+            foreach (RoadSegment branch in newBranches)
+            {
+                foreach (RoadSegment link in previousSegment.LinksForward)
+                {
+                    branch.LinksBackward.Add(link);
 
-                previousSegment.links.f.push(@)
-                @links.b.push(previousSegment)
-               */
+                    var linksContainingPrevious = link.GetListOfLinksContainingSegment(previousSegment);
+
+                    if (linksContainingPrevious != null)
+                    {
+                        // TODO: Verify this works as expected (pass by ref). -Casper 2017-09-11
+                        linksContainingPrevious.Add(branch);
+                    }
+                }
+
+                previousSegment.LinksForward.Add(branch);
+                branch.LinksBackward.Add(previousSegment);
+            }
+            */
 
             return newBranches;
         }
 
+        // TODO: This function may not working correctly, investigate issues with heatmap. -Casper 2017-09-17
         protected float CalculatePopulationForRoad(Texture2D heatMap, Rect cityBounds, RoadSegment segment)
         {
             return (GetPopulationAt(heatMap, cityBounds, segment.PointA) + GetPopulationAt(heatMap, cityBounds, segment.PointB)) / 2f;
@@ -511,10 +538,16 @@ namespace AltSrc.ProceduralCity.Generation
             if (cityBounds.Contains(position))
             {
                 Vector2 texturePosition = new Vector2(
-                    (position.x - cityBounds.x) / cityBounds.width,
-                    (position.y - cityBounds.y) / cityBounds.height);
+                    (position.x / cityBounds.width) * heatMap.width,
+                    (position.y / cityBounds.height) * heatMap.height);
+                    //(position.x - cityBounds.x) / cityBounds.width,
+                    //(position.y - cityBounds.y) / cityBounds.height);
 
                 return heatMap.GetPixel((int)texturePosition.x, (int)texturePosition.y).r;
+            }
+            else
+            {
+                Debug.LogWarning(cityBounds.ToString() + " does not contain " + position.ToString());
             }
 
             return 0f;
