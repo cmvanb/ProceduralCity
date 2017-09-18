@@ -18,12 +18,6 @@ namespace AltSrc.ProceduralCity.Generation
         public string CityName;
 
         [SerializeField]
-        public float DefaultRoadWidth;
-
-        [SerializeField]
-        public DictionaryRoadTypeFloat DefaultRoadLengths = new DictionaryRoadTypeFloat();
-
-        [SerializeField]
         public Rect CityBounds;
 
         // TODO: Consider renaming var to QuadTreeMaxSegmentsPerNode. -Casper 2017-08-17
@@ -65,6 +59,12 @@ namespace AltSrc.ProceduralCity.Generation
 
         [SerializeField]
         public float BranchRoadMaxDeviationAngle;
+
+        [SerializeField]
+        public DictionaryRoadTypeFloat DefaultRoadWidths = new DictionaryRoadTypeFloat();
+
+        [SerializeField]
+        public DictionaryRoadTypeFloat DefaultRoadLengths = new DictionaryRoadTypeFloat();
 
         [MenuItem("Assets/Create/CityGeneratorRules")]
         public static void CreateAsset()

@@ -170,7 +170,7 @@ namespace AltSrc.ProceduralCity.Generation
             // build population heatmap quad
             GameObject heatMapQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
             heatMapQuad.transform.localScale = new Vector3(rules.CityBounds.width, rules.CityBounds.height, 1f);
-            heatMapQuad.transform.eulerAngles = new Vector3(90f, 0f, 0f);
+            heatMapQuad.transform.eulerAngles = new Vector3(90f, 180f, 0f);
             heatMapQuad.GetComponent<Renderer>().material = new Material(Shader.Find("Unlit/Texture"));
             heatMapQuad.GetComponent<Renderer>().material.mainTexture = model.PopulationHeatMap;
             heatMapQuad.transform.parent = debugView.transform;
@@ -188,18 +188,18 @@ namespace AltSrc.ProceduralCity.Generation
                 segmentQuad.name = segment.ToString();
                 var midPoint = segment.LineSegment2D.MidPoint;
                 segmentQuad.transform.position = new Vector3(midPoint.x, 0.01f, midPoint.y);
-                segmentQuad.transform.localScale = new Vector3(segment.LineSegment2D.Length, rules.DefaultRoadWidth, 1f);
+                segmentQuad.transform.localScale = new Vector3(segment.LineSegment2D.Length, rules.DefaultRoadWidths[segment.RoadType], 1f);
                 segmentQuad.transform.eulerAngles = new Vector3(90f, segment.LineSegment2D.DirectionInDegrees, 0f);
 
                 GameObject markerA = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 markerA.name = segment.PointA.ToString() + ", Pop: " 
-                    + GetPopulationAt(rules.PopulationHeatMap, rules.CityBounds, segment.PointA).ToString();
+                    + GetPopulationAt(model.PopulationHeatMap, rules.CityBounds, segment.PointA).ToString();
                 markerA.transform.parent = segmentQuad.transform;
                 markerA.transform.position = segment.PointA.ToVec3XZ();
 
                 GameObject markerB = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 markerB.name = segment.PointB.ToString() + ", Pop: "
-                    + GetPopulationAt(rules.PopulationHeatMap, rules.CityBounds, segment.PointB).ToString();
+                    + GetPopulationAt(model.PopulationHeatMap, rules.CityBounds, segment.PointB).ToString();
                 markerB.transform.parent = segmentQuad.transform;
                 markerB.transform.position = segment.PointB.ToVec3XZ();
 
