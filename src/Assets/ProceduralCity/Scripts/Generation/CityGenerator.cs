@@ -285,17 +285,10 @@ namespace AltSrc.ProceduralCity.Generation
                         actionPriority = 2;
                         actionFunc = () =>
                         {
-                            if (matches.Any(x =>
-                                (x.PointA == segment.PointB && x.PointB == segment.PointA) ||
-                                (x.PointA == segment.PointA && x.PointB == segment.PointB)))
-                            {
-                                Debug.Log("proposed segment [" + segment.ToString() + "] discarded by snap to crossing check (#2)");
-                                return false;
-                            }
-
                             segment.LineSegment2D = new LineSegment2D(segment.PointA, match.PointB);
                             segment.HasBeenSplit = true;
 
+                            // TODO: Restore this functionality. -Casper 2017-09-18
                             // NOTE: The following code appears to be the reason for all the links bookkeeping... -Casper 2017-09-15
 
                             /*
@@ -423,7 +416,6 @@ namespace AltSrc.ProceduralCity.Generation
                 // basic continuing road
                 RoadSegment continueStraight = templateContinue(previousSegment.LineSegment2D.DirectionInDegrees);
 
-                // NOTE: previously named straightPop
                 float continueStraightPopulation = CalculatePopulationForRoad(populationHeatMap, rules.CityBounds, continueStraight);
 
                 // highway logic is more complex, can veer off by an angle and generate branches in 
@@ -527,7 +519,6 @@ namespace AltSrc.ProceduralCity.Generation
             return newBranches;
         }
 
-        // TODO: This function may not working correctly, investigate issues with heatmap. -Casper 2017-09-17
         protected float CalculatePopulationForRoad(Texture2D heatMap, Rect cityBounds, RoadSegment segment)
         {
             return (GetPopulationAt(heatMap, cityBounds, segment.PointA) + GetPopulationAt(heatMap, cityBounds, segment.PointB)) / 2f;
@@ -540,8 +531,6 @@ namespace AltSrc.ProceduralCity.Generation
                 Vector2 texturePosition = new Vector2(
                     (position.x / cityBounds.width) * heatMap.width,
                     (position.y / cityBounds.height) * heatMap.height);
-                    //(position.x - cityBounds.x) / cityBounds.width,
-                    //(position.y - cityBounds.y) / cityBounds.height);
 
                 return heatMap.GetPixel((int)texturePosition.x, (int)texturePosition.y).r;
             }
