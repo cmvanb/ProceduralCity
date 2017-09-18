@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Linq;
+using UnityEngine;
 
 namespace CatlikeCoding.SimplexNoise
 {
@@ -49,6 +50,19 @@ namespace CatlikeCoding.SimplexNoise
             simplexValueMethods,
             simplexMethods
         };
+
+        public static void SeedHashFunction()
+        {
+            int[] newHash = Enumerable.Range(0, 256).ToArray();
+
+            System.Random rng = new System.Random();
+            newHash = newHash.OrderBy(x => rng.Next()).ToArray();
+
+            hash = new int[512];
+
+            newHash.CopyTo(hash, 0);
+            newHash.CopyTo(hash, 256);
+        }
 
         private static int[] hash = 
         {

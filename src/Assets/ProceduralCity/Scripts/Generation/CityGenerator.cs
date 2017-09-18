@@ -57,6 +57,10 @@ namespace AltSrc.ProceduralCity.Generation
             int height = MathUtils.RoundUpToNextPow2((int)(rules.CityBounds.height / 100));
             int resolution = Mathf.Max(width, height);
 
+            // NOTE: seed the noise library's hash function, otherwise TextureCreator will always
+            // return the same texture.
+            Noise.SeedHashFunction();
+
             Texture2D result = TextureCreator.Create(resolution);
 
             return result;
