@@ -20,7 +20,7 @@ MonoBehaviour:
     height: 10000
   QuadTreeMaxObjectsPerNode: 8
   QuadTreeMaxDepth: 8
-  MaxRoadSegments: 1000
+  MaxRoadSegments: 4000
   MinimumIntersectionAngleDifference: 40
   RoadSnapDistance: 10
   PopulationHeatMap: {fileID: 0}

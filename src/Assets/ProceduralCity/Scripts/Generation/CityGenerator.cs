@@ -222,6 +222,15 @@ namespace AltSrc.ProceduralCity.Generation
             List<RoadSegment> generatedSegments,
             QuadTree<RoadSegment> quadTree)
         {
+            // don't allow segments to escape city bounds
+            if (segment.Bounds.xMin < rules.CityBounds.xMin
+                || segment.Bounds.yMin < rules.CityBounds.yMin
+                || segment.Bounds.xMax > rules.CityBounds.xMax
+                || segment.Bounds.yMax > rules.CityBounds.yMax)
+            {
+                return false;
+            }
+
             int actionPriority = 0;
 
             Func<bool> actionFunc = null;
@@ -533,10 +542,6 @@ namespace AltSrc.ProceduralCity.Generation
                     (position.y / cityBounds.height) * heatMap.height);
 
                 return heatMap.GetPixel((int)texturePosition.x, (int)texturePosition.y).r;
-            }
-            else
-            {
-                Debug.LogWarning(cityBounds.ToString() + " does not contain " + position.ToString());
             }
 
             return 0f;
