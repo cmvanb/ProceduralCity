@@ -269,7 +269,6 @@ namespace AltSrc.UnityCommon.Math
             return ((u).x * (v).y - (u).y * (v).x);
         }
 
-        // TODO: Verify this function works as expected. -Casper 2017-09-11
         /// <summary>
         ///   Find the distance from a point to a line segment. This is done by projecting the vector
         ///   from point to segment.PointA onto the line segment, then calculating the distance between
@@ -299,6 +298,35 @@ namespace AltSrc.UnityCommon.Math
             projectedLineLength = projectedVector.magnitude;
 
             return Vector2.Distance(projectedPoint, point);
+        }
+
+        public static float ShortestDistanceBetweenLineSegments(LineSegment2D s1, LineSegment2D s2)
+        {
+            System.Func<LineSegment2D, Vector2, float> validDistance = 
+                (LineSegment2D s, Vector2 p) => 
+                {
+                    Vector2 projectedPoint = Vector2.zero;
+
+                    float projectedLineLength = Mathf.Infinity;
+
+                    float result = LineSegment2D.FindDistanceToPoint(
+                        s, p, out projectedPoint, out projectedLineLength);
+
+                    if (projectedLineLength >= 0f
+                        && projectedLineLength <= s.Length)
+                    {
+                        return result;
+                    }
+
+                    return Mathf.Infinity;
+                };
+
+            float distanceS1A = validDistance(s2, s1.PointA);
+            float distanceS1B = validDistance(s2, s1.PointB);
+            float distanceS2A = validDistance(s1, s2.PointA);
+            float distanceS2B = validDistance(s1, s2.PointB);
+
+            return Mathf.Min(distanceS1A, distanceS1B, distanceS2A, distanceS2B);
         }
     }
 }

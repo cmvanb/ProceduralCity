@@ -34,6 +34,9 @@ namespace AltSrc.ProceduralCity.Generation
         public float MinimumIntersectionAngleDifference;
 
         [SerializeField]
+        public float MinimumDistanceBetweenRoads;
+
+        [SerializeField]
         public float RoadSnapDistance;
 
         [SerializeField]

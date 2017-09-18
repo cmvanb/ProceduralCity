@@ -22,6 +22,7 @@ MonoBehaviour:
   QuadTreeMaxDepth: 8
   MaxRoadSegments: 4000
   MinimumIntersectionAngleDifference: 30
+  MinimumDistanceBetweenRoads: 25
   RoadSnapDistance: 10
   PopulationHeatMap: {fileID: 0}
   HighwayBranchPriority: 5

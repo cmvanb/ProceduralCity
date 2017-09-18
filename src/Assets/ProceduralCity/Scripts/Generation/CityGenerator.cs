@@ -240,8 +240,6 @@ namespace AltSrc.ProceduralCity.Generation
 
             foreach (RoadSegment match in matches)
             {
-                // TODO: Consider factoring out the various checks into separate functions. -Casper 2017-09-18
-                // intersection check
                 Vector2 intersectionPoint0, intersectionPoint1;
 
                 int intersecting = LineSegment2D.CheckIntersection(
@@ -250,22 +248,25 @@ namespace AltSrc.ProceduralCity.Generation
                     out intersectionPoint0,
                     out intersectionPoint1);
 
+                float differenceInDegrees = LineSegment2D.MinimumAngleDifferenceInDegrees(
+                    segment.LineSegment2D,
+                    match.LineSegment2D);
+
+                // TODO: Consider factoring out the various checks into separate functions. -Casper 2017-09-18
+                // intersection overlap check
                 if (intersecting == 2)
                 {
                     Debug.LogWarning("#0");
                     return false;
                 }
 
-                // 1 means the line segments intersect but don't overlap
+                // TODO: Consider factoring out the various checks into separate functions. -Casper 2017-09-18
+                // intersection non-overlap check
                 if (intersecting == 1
                     && intersectionPoint0 != segment.PointA
                     && intersectionPoint0 != segment.PointB)
                 {
                     // if intersecting lines are too similar don't continue
-                    float differenceInDegrees = LineSegment2D.MinimumAngleDifferenceInDegrees(
-                        segment.LineSegment2D,
-                        match.LineSegment2D);
-
                     if (differenceInDegrees < rules.MinimumIntersectionAngleDifference)
                     {
                         Debug.LogWarning("#1");
@@ -335,24 +336,30 @@ namespace AltSrc.ProceduralCity.Generation
 
                 float projectedLineLength = Mathf.Infinity;
 
+                float distanceToSegmentPointA = LineSegment2D.FindDistanceToPoint(
+                    match.LineSegment2D,
+                    segment.PointA,
+                    out projectedPoint,
+                    out projectedLineLength);
+
                 float distanceToSegmentPointB = LineSegment2D.FindDistanceToPoint(
                     match.LineSegment2D,
                     segment.PointB,
                     out projectedPoint,
                     out projectedLineLength);
 
-                if (distanceToSegmentPointB < rules.RoadSnapDistance
+                float distanceToSegmentPoint = Mathf.Min(distanceToSegmentPointA, distanceToSegmentPointB);
+
+                if (distanceToSegmentPoint < rules.RoadSnapDistance
                     && projectedLineLength >= 0f
                     && projectedLineLength <= match.LineSegment2D.Length)
                 {
-                    segment.LineSegment2D = new LineSegment2D(segment.PointA, projectedPoint);
+                    Vector2 point = distanceToSegmentPoint == distanceToSegmentPointA ? segment.PointA : segment.PointB;
+
+                    segment.LineSegment2D = new LineSegment2D(point, projectedPoint);
                     segment.HasBeenSplit = true;
 
                     // if intersecting lines are too similar don't continue
-                    float differenceInDegrees = LineSegment2D.MinimumAngleDifferenceInDegrees(
-                        segment.LineSegment2D,
-                        match.LineSegment2D);
-
                     if (differenceInDegrees < rules.MinimumIntersectionAngleDifference)
                     {
                         Debug.LogWarning("#3");
@@ -361,6 +368,22 @@ namespace AltSrc.ProceduralCity.Generation
 
                     match.Split(projectedPoint, segment);
                 }
+
+                // TODO: Consider factoring out the various checks into separate functions. -Casper 2017-09-18
+                // too parallel check
+/* 
+                if (differenceInDegrees > 3f && differenceInDegrees < 15f)
+                {
+                    float shortestDistanceBetweenRoads = LineSegment2D.ShortestDistanceBetweenLineSegments(
+                        segment.LineSegment2D, match.LineSegment2D);
+
+                    if (shortestDistanceBetweenRoads < rules.MinimumDistanceBetweenRoads)
+                    {
+                        Debug.LogWarning("#4");
+                        return false;
+                    }
+                }
+ */
             }
 
             return true;
