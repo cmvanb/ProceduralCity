@@ -7,24 +7,22 @@ namespace AltSrc.ProceduralCity.Generation.Roads
 {
     public class RoadSegment : IBounds
     {
+        public LineSegment2D LineSegment2D { get; set; }
         // TODO: Consider refactoring this variable out into CityGenerator. -Casper 2017-08-31
         /// <summary>
         ///   The closer Priority is to 0, the sooner this segment will be popped out of the queue
         ///   and used in CityGenerator.cs.
         /// </summary>
         public int Priority { get; set; }
+        public RoadType RoadType { get; private set; }
         public bool HasBeenSplit { get; set; }
-        public LineSegment2D LineSegment2D { get; set; }
-        /*
         public List<RoadSegment> LinksForward { get; set; }
         public List<RoadSegment> LinksBackward { get; set; }
-        */
 
         public Vector2 PointA { get { return this.LineSegment2D.PointA; } }
         public Vector2 PointB { get { return this.LineSegment2D.PointB; } }
         public Rect Bounds { get { return this.LineSegment2D.Bounds; } }
 
-        public RoadType RoadType { get; private set; }
 
         public RoadSegment(
             Vector2 pointA,
@@ -35,12 +33,10 @@ namespace AltSrc.ProceduralCity.Generation.Roads
         {
             this.LineSegment2D = new LineSegment2D(pointA, pointB);
             this.Priority = priority;
-            /*
-            this.LinksForward = new List<RoadSegment>();
-            this.LinksBackward = new List<RoadSegment>();
-            */
             this.RoadType = roadType;
             this.HasBeenSplit = hasBeenSplit;
+            this.LinksForward = new List<RoadSegment>();
+            this.LinksBackward = new List<RoadSegment>();
         }
 
         public RoadSegment Split(Vector2 point, RoadSegment other)
@@ -50,7 +46,6 @@ namespace AltSrc.ProceduralCity.Generation.Roads
             splitSegment.LineSegment2D = new LineSegment2D(this.PointA, point);
             this.LineSegment2D = new LineSegment2D(point, this.PointB);
 
-            /*
             // links are not copied by RoadSegment.FromExisting(), so copy them over into new lists
             splitSegment.LinksBackward = new List<RoadSegment>(this.LinksBackward);
             splitSegment.LinksForward = new List<RoadSegment>(this.LinksForward);
@@ -72,7 +67,11 @@ namespace AltSrc.ProceduralCity.Generation.Roads
                 else
                 {
                     index = link.LinksForward.IndexOf(this);
-                    link.LinksForward[index] = splitSegment;
+
+                    if (index != -1)
+                    {
+                        link.LinksForward[index] = splitSegment;
+                    }
                 }
             }
 
@@ -86,12 +85,10 @@ namespace AltSrc.ProceduralCity.Generation.Roads
 
             other.LinksForward.Add(firstSplit);
             other.LinksForward.Add(secondSplit);
-            */
 
             return splitSegment;
         }
 
-        /*
         public bool StartIsBackwards()
         {
             if (this.LinksBackward.Count > 0)
@@ -108,21 +105,6 @@ namespace AltSrc.ProceduralCity.Generation.Roads
             return false;
         }
 
-        public List<RoadSegment> GetListOfLinksContainingSegment(RoadSegment segment)
-        {
-            if (this.LinksBackward.Contains(segment))
-            {
-                return this.LinksBackward;
-            }
-            else if (this.LinksForward.Contains(segment))
-            {
-                return this.LinksForward;
-            }
-
-            return null;
-        }
-        */
-
         public override string ToString()
         {
             return 
@@ -132,6 +114,46 @@ namespace AltSrc.ProceduralCity.Generation.Roads
                 + ", R: " + this.RoadType;
         }
 
+        public static void ClearAllLinksToRoadSegment(RoadSegment s)
+        {
+            for (int i = 0; i < s.LinksBackward.Count; ++i)
+            {
+                RoadSegment link = s.LinksBackward[i];
+
+                if (link.LinksForward.Contains(s))
+                {
+                    link.LinksForward.Remove(s);
+                }
+                if (link.LinksBackward.Contains(s))
+                {
+                    link.LinksBackward.Remove(s);
+                }
+
+                s.LinksBackward.Remove(link);
+            }
+
+            for (int i = 0; i < s.LinksForward.Count; ++i)
+            {
+                RoadSegment link = s.LinksForward[i];
+
+                if (link.LinksForward.Contains(s))
+                {
+                    link.LinksForward.Remove(s);
+                }
+                if (link.LinksBackward.Contains(s))
+                {
+                    link.LinksBackward.Remove(s);
+                }
+
+                s.LinksForward.Remove(link);
+            }
+        }
+
+        /// <summary>
+        ///   Construct a new road segment identical to an existing road segment.
+        ///       @param existingSegment - the road segment to copy
+        ///   NOTE: The new segment won't copy over the links arrays, these must be manually populated.
+        /// </summary>
         public static RoadSegment FromExisting(RoadSegment existingSegment)
         {
             return new RoadSegment(
