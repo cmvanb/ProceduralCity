@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using AltSrc.UnityCommon.Math;
 
 namespace AltSrc.UnityCommon.DataStructures
 {
@@ -17,9 +18,8 @@ namespace AltSrc.UnityCommon.DataStructures
         public Rect Bounds { get; private set; }
         public int MaxObjectsPerNode { get; private set; }
         public int MaxDepth { get; private set; }
-
-        protected List<T> objects;
-        protected QuadTree<T>[] nodes;
+        public List<T> Objects;
+        public QuadTree<T>[] Nodes;
 
         public QuadTree(int depth, Rect bounds, int maxObjectsPerNode = 8, int maxDepth = 8)
         {
@@ -28,48 +28,48 @@ namespace AltSrc.UnityCommon.DataStructures
             this.MaxObjectsPerNode = maxObjectsPerNode;
             this.MaxDepth = maxDepth;
 
-            this.objects = new List<T>();
-            this.nodes = new QuadTree<T>[4];
+            this.Objects = new List<T>();
+            this.Nodes = new QuadTree<T>[4];
         }
 
         /// <summary>
         ///   Insert an object into the quad tree. If this node exceeds its maximum it will split
-        ///   into subnodes and insert the objects that fit into those subnodes.
+        ///   into subnodes and insert the Objects that fit into those subnodes.
         /// </summary>
         public void Insert(T o)
         {
-            if (this.nodes[0] != null)
+            if (this.Nodes[0] != null)
             {
                 int index = GetIndex(o);
 
                 if (index != -1)
                 {
-                    this.nodes[index].Insert(o);
+                    this.Nodes[index].Insert(o);
                     return;
                 }
             }
 
-            this.objects.Add(o);
+            this.Objects.Add(o);
 
-            if (this.objects.Count > this.MaxObjectsPerNode
+            if (this.Objects.Count > this.MaxObjectsPerNode
                 && this.Depth < this.MaxDepth)
             {
-                if (this.nodes[0] == null)
+                if (this.Nodes[0] == null)
                 {
                     Split();
                 }
 
                 int i = 0;
 
-                while (i < this.objects.Count)
+                while (i < this.Objects.Count)
                 {
-                    T obj = this.objects[i];
+                    T obj = this.Objects[i];
                     int index = GetIndex(obj);
 
                     if (index != -1)
                     {
-                        this.nodes[index].Insert(obj);
-                        this.objects.RemoveAt(i);
+                        this.Nodes[index].Insert(obj);
+                        this.Objects.RemoveAt(i);
                     }
                     else
                     {
@@ -80,7 +80,7 @@ namespace AltSrc.UnityCommon.DataStructures
         }
 
         /// <summary>
-        ///   Retrieve a list of objects in the same node/subnodes as object o.
+        ///   Retrieve a list of Objects in the same node/subnodes as object o.
         /// </summary>
         public List<T> Retrieve(T o)
         {
@@ -88,30 +88,58 @@ namespace AltSrc.UnityCommon.DataStructures
             int index = GetIndex(o);
 
             if (index != -1
-                && this.nodes[0] != null)
+                && this.Nodes[0] != null)
             {
-                retrieved.AddRange(this.nodes[index].Retrieve(o));
+                retrieved.AddRange(this.Nodes[index].Retrieve(o));
             }
 
-            retrieved.AddRange(this.objects);
+            retrieved.AddRange(this.Objects);
             return retrieved;
         }
 
         /// <summary>
-        ///   Clear the quadtree of all objects and subnodes.
+        ///   Clear the quadtree of all Objects and subnodes.
         /// </summary>
         public void Clear()
         {
-            this.objects.Clear();
+            this.Objects.Clear();
 
-            for (int i = 0; i < this.nodes.Length; i++)
+            for (int i = 0; i < this.Nodes.Length; i++)
             {
-                if (this.nodes[i] != null)
+                if (this.Nodes[i] != null)
                 {
-                    this.nodes[i].Clear();
-                    this.nodes[i] = null;
+                    this.Nodes[i].Clear();
+                    this.Nodes[i] = null;
                 }
             }
+        }
+
+        /// <summary>
+        ///   Derive line segments from the bounds of each quadtree node. Useful for debugging.
+        /// </summary>
+        public List<LineSegment2D> GetLineSegments()
+        {
+            List<LineSegment2D> lineSegments = new List<LineSegment2D>();
+
+            for (int i = 0; i < this.Nodes.Length; i++)
+            {
+                if (this.Nodes[i] != null)
+                {
+                    lineSegments.AddRange(this.Nodes[i].GetLineSegments());
+                }
+            }
+
+            Vector2 topLeft = new Vector2(this.Bounds.xMin, this.Bounds.yMin);
+            Vector2 topRight = new Vector2(this.Bounds.xMax, this.Bounds.yMin);
+            Vector2 bottomLeft = new Vector2(this.Bounds.xMin, this.Bounds.yMax);
+            Vector2 bottomRight = new Vector2(this.Bounds.xMax, this.Bounds.yMax);
+
+            lineSegments.Add(new LineSegment2D(topLeft, topRight));
+            lineSegments.Add(new LineSegment2D(topRight, bottomRight));
+            lineSegments.Add(new LineSegment2D(bottomRight, bottomLeft));
+            lineSegments.Add(new LineSegment2D(bottomLeft, topLeft));
+
+            return lineSegments;
         }
 
         /// <summary>
@@ -124,22 +152,22 @@ namespace AltSrc.UnityCommon.DataStructures
             float x = this.Bounds.x;
             float y = this.Bounds.y;
 
-            nodes[0] = new QuadTree<T>(
+            Nodes[0] = new QuadTree<T>(
                 this.Depth + 1,
                 new Rect(x + splitWidth, y, splitWidth, splitHeight),
                 this.MaxObjectsPerNode,
                 this.MaxDepth);
-            nodes[1] = new QuadTree<T>(
+            Nodes[1] = new QuadTree<T>(
                 this.Depth + 1,
                 new Rect(x, y, splitWidth, splitHeight),
                 this.MaxObjectsPerNode,
                 this.MaxDepth);
-            nodes[2] = new QuadTree<T>(
+            Nodes[2] = new QuadTree<T>(
                 this.Depth + 1,
                 new Rect(x, y + splitHeight, splitWidth, splitHeight),
                 this.MaxObjectsPerNode,
                 this.MaxDepth);
-            nodes[3] = new QuadTree<T>(
+            Nodes[3] = new QuadTree<T>(
                 this.Depth + 1,
                 new Rect(x + splitWidth, y + splitHeight, splitWidth, splitHeight),
                 this.MaxObjectsPerNode,
