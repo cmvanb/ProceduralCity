@@ -147,6 +147,8 @@ namespace AltSrc.ProceduralCity.Generation
 
             Debug.Log(generatedSegments.Count + " segments generated.");
 
+            QuadTreeView.Build(quadTree);
+
             return generatedSegments;
         }
 
@@ -237,6 +239,8 @@ namespace AltSrc.ProceduralCity.Generation
             }
 
             List<RoadSegment> matches = quadTree.Retrieve(segment);
+
+            Debug.LogWarning(segment.ToString() + " has " + matches.Count);
 
             foreach (RoadSegment match in matches)
             {
