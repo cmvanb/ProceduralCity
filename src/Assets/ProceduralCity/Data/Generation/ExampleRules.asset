@@ -29,7 +29,7 @@ MonoBehaviour:
   HighwayBranchPopulationThreshold: 0.1
   HighwayBranchProbability: 0.02
   NormalBranchPopulationThreshold: 0.49
-  NormalBranchProbability: 0.25
+  NormalBranchProbability: 0.75
   StraightRoadMaxDeviationAngle: 4
   BranchRoadMaxDeviationAngle: 4
   DefaultRoadWidths:
