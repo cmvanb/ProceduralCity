@@ -34,11 +34,11 @@ namespace AltSrc.UnityCommon.DataStructures
 
         /// <summary>
         ///   Insert an object into the quad tree. If this node exceeds its maximum it will split
-        ///   into subnodes and insert the Objects that fit into those subnodes.
+        ///   into subnodes and insert the objects that fit into those subnodes.
         /// </summary>
         public void Insert(T o)
         {
-            if (this.Nodes[0] != null)
+            if (IsSplit())
             {
                 int index = GetIndex(o);
 
@@ -54,7 +54,7 @@ namespace AltSrc.UnityCommon.DataStructures
             if (this.Objects.Count > this.MaxObjectsPerNode
                 && this.Depth < this.MaxDepth)
             {
-                if (this.Nodes[0] == null)
+                if (!IsSplit())
                 {
                     Split();
                 }
@@ -80,17 +80,20 @@ namespace AltSrc.UnityCommon.DataStructures
         }
 
         /// <summary>
-        ///   Retrieve a list of Objects in the same node/subnodes as object o.
+        ///   Retrieve a list of objects in the same node/subnodes as bounds b.
         /// </summary>
-        public List<T> Retrieve(T o)
+        public List<T> Retrieve(IBounds b)
         {
             List<T> retrieved = new List<T>();
-            int index = GetIndex(o);
 
-            if (index != -1
-                && this.Nodes[0] != null)
+            if (IsSplit())
             {
-                retrieved.AddRange(this.Nodes[index].Retrieve(o));
+                int index = GetIndex(b);
+
+                if (index != -1)
+                {
+                    retrieved.AddRange(this.Nodes[index].Retrieve(b));
+                }
             }
 
             retrieved.AddRange(this.Objects);
@@ -98,7 +101,7 @@ namespace AltSrc.UnityCommon.DataStructures
         }
 
         /// <summary>
-        ///   Clear the quadtree of all Objects and subnodes.
+        ///   Clear the quadtree of all objects and subnodes.
         /// </summary>
         public void Clear()
         {
@@ -121,9 +124,9 @@ namespace AltSrc.UnityCommon.DataStructures
         {
             List<LineSegment2D> lineSegments = new List<LineSegment2D>();
 
-            for (int i = 0; i < this.Nodes.Length; i++)
+            if (IsSplit())
             {
-                if (this.Nodes[i] != null)
+                for (int i = 0; i < this.Nodes.Length; i++)
                 {
                     lineSegments.AddRange(this.Nodes[i].GetLineSegments());
                 }
@@ -140,6 +143,24 @@ namespace AltSrc.UnityCommon.DataStructures
             lineSegments.Add(new LineSegment2D(bottomLeft, topLeft));
 
             return lineSegments;
+        }
+
+        /// <summary>
+        ///   Returns the leaf node for specified bounds.
+        /// </summary>
+        public QuadTree<T> GetLeafNodeAt(IBounds b)
+        {
+            if (IsSplit())
+            {
+                int index = GetIndex(b);
+
+                if (index != -1)
+                {
+                    return this.Nodes[index].GetLeafNodeAt(b);
+                }
+            }
+
+            return this;
         }
 
         /// <summary>
@@ -175,27 +196,35 @@ namespace AltSrc.UnityCommon.DataStructures
         }
 
         /// <summary>
+        ///   Has this node been split into subnodes? Returns true if a subnode is assigned at index 0.
+        /// </summary>
+        protected bool IsSplit()
+        {
+            return this.Nodes[0] != null;
+        }
+
+        /// <summary>
         ///   Determine which node the object belongs in. A return value of -1 means the object
         ///   can't fit within a subnode and must belong to the parent node.
         /// </summary>
-        protected int GetIndex(T o)
+        protected int GetIndex(IBounds b)
         {
             float xMiddle = this.Bounds.x + (this.Bounds.width / 2);
             float yMiddle = this.Bounds.y + (this.Bounds.height / 2);
 
             // Object can completely fit within the top quadrants.
             bool topQuadrants =
-                o.Bounds.y >= this.Bounds.y
-                && o.Bounds.y + o.Bounds.height < yMiddle;
+                b.Bounds.y >= this.Bounds.y
+                && b.Bounds.y + b.Bounds.height < yMiddle;
 
             // Object can completely fit within the bottom quadrants.
             bool bottomQuadrants =
-                o.Bounds.y > yMiddle
-                && o.Bounds.y + o.Bounds.height <= this.Bounds.y + this.Bounds.width;
+                b.Bounds.y > yMiddle
+                && b.Bounds.y + b.Bounds.height <= this.Bounds.y + this.Bounds.width;
 
             // Object can completely fit within the left quadrants.
-            if (o.Bounds.x >= this.Bounds.x
-                && o.Bounds.x + o.Bounds.width < xMiddle)
+            if (b.Bounds.x >= this.Bounds.x
+                && b.Bounds.x + b.Bounds.width < xMiddle)
             {
                 if (topQuadrants)
                 {
@@ -207,8 +236,8 @@ namespace AltSrc.UnityCommon.DataStructures
                 }
             }
             // Object can completely fit within the right quadrants.
-            else if (o.Bounds.x > xMiddle
-                && o.Bounds.x + o.Bounds.width <= this.Bounds.x + this.Bounds.width)
+            else if (b.Bounds.x > xMiddle
+                && b.Bounds.x + b.Bounds.width <= this.Bounds.x + this.Bounds.width)
             {
                 if (topQuadrants)
                 {
@@ -225,17 +254,17 @@ namespace AltSrc.UnityCommon.DataStructures
             // NOTE: If this function doesn't work as expected, try the following code. -Casper 2017-08-16
             /*
             // Object can completely fit within the top quadrants
-            bool topQuadrants = (o.Bounds.y < yMiddle && o.Bounds.y + o.Bounds.height < yMiddle);
+            bool topQuadrants = (b.Bounds.y < yMiddle && b.Bounds.y + b.Bounds.height < yMiddle);
             // Object can completely fit within the bottom quadrants
-            bool bottomQuadrants = (o.Bounds.y > yMiddle);
+            bool bottomQuadrants = (b.Bounds.y > yMiddle);
 
             // Object can completely fit within the left quadrants
-            if (o.Bounds.x < xMiddle && o.Bounds.x + o.Bounds.width < xMiddle)
+            if (b.Bounds.x < xMiddle && b.Bounds.x + b.Bounds.width < xMiddle)
             {
                 // ... same here
             }
             // Object can completely fit within the right quadrants
-            else if (o.Bounds.x > xMiddle)
+            else if (b.Bounds.x > xMiddle)
             {
                 // ... same here
             }
