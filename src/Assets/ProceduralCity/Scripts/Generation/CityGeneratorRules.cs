@@ -69,6 +69,9 @@ namespace AltSrc.ProceduralCity.Generation
         [SerializeField]
         public DictionaryRoadTypeFloat DefaultRoadLengths = new DictionaryRoadTypeFloat();
 
+        [SerializeField]
+        public DictionaryRoadTypeFloat DefaultRoadYOffset = new DictionaryRoadTypeFloat();
+
         [MenuItem("Assets/Create/CityGeneratorRules")]
         public static void CreateAsset()
         {

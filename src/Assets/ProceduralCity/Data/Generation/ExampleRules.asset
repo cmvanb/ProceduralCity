@@ -42,3 +42,8 @@ MonoBehaviour:
     _values:
     - 75
     - 100
+  DefaultRoadYOffset:
+    _keys: 0000000001000000
+    _values:
+    - 0.01
+    - 0.02

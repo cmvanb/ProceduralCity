@@ -190,25 +190,17 @@ namespace AltSrc.ProceduralCity.Generation
 
             foreach (RoadSegment segment in model.RoadSegments)
             {
+                float roadYOffset = rules.DefaultRoadYOffset[segment.RoadType];
+
+                // TODO: Build road segment manually from vertices to reduce the weird scaling effects on the markers. -Casper -2018-01-31
                 // build road segment
                 GameObject segmentQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
                 segmentQuad.name = segment.ToString();
                 var midPoint = segment.LineSegment2D.MidPoint;
-                segmentQuad.transform.position = new Vector3(midPoint.x, 0.01f, midPoint.y);
+                segmentQuad.transform.position = midPoint.ToVec3XZ(roadYOffset);
                 segmentQuad.transform.localScale = new Vector3(segment.LineSegment2D.Length, rules.DefaultRoadWidths[segment.RoadType], 1f);
                 segmentQuad.transform.eulerAngles = new Vector3(90f, segment.LineSegment2D.DirectionInDegrees, 0f);
-
-                GameObject markerA = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                markerA.name = segment.PointA.ToString() + ", Pop: " 
-                    + GetPopulationAt(model.PopulationHeatMap, rules.CityBounds, segment.PointA).ToString();
-                markerA.transform.parent = segmentQuad.transform;
-                markerA.transform.position = segment.PointA.ToVec3XZ();
-
-                GameObject markerB = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                markerB.name = segment.PointB.ToString() + ", Pop: "
-                    + GetPopulationAt(model.PopulationHeatMap, rules.CityBounds, segment.PointB).ToString();
-                markerB.transform.parent = segmentQuad.transform;
-                markerB.transform.position = segment.PointB.ToVec3XZ();
+                segmentQuad.transform.parent = debugView.transform;
 
                 if (segment.RoadType == RoadType.Highway)
                 {
@@ -219,7 +211,18 @@ namespace AltSrc.ProceduralCity.Generation
                     segmentQuad.GetComponent<Renderer>().material = normalMaterial;
                 }
 
-                segmentQuad.transform.parent = debugView.transform;
+                // add markers for debugging
+                GameObject markerA = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                markerA.name = segment.PointA.ToString() + ", Pop: " 
+                    + GetPopulationAt(model.PopulationHeatMap, rules.CityBounds, segment.PointA).ToString();
+                markerA.transform.position = segment.PointA.ToVec3XZ(roadYOffset);
+                markerA.transform.parent = segmentQuad.transform;
+
+                GameObject markerB = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                markerB.name = segment.PointB.ToString() + ", Pop: "
+                    + GetPopulationAt(model.PopulationHeatMap, rules.CityBounds, segment.PointB).ToString();
+                markerB.transform.position = segment.PointB.ToVec3XZ(roadYOffset);
+                markerB.transform.parent = segmentQuad.transform;
             }
         }
 
