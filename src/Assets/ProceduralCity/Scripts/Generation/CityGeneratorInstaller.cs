@@ -7,6 +7,8 @@ namespace AltSrc.ProceduralCity.Generation
     {
         public override void InstallBindings()
         {
+            // TODO: bind materials here
+            //Container.Bind<Material>().AsTransient();
         }
     }
 }

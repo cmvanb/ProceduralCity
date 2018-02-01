@@ -48,8 +48,7 @@ namespace AltSrc.ProceduralCity.Generation
             //GenerateBuildings();
 
             // build a view for the city
-            CityView view = new CityView(model);
-            view.Build();
+            CityView.Build(model);
 
             // build a view for the quadtree
             QuadTreeView.Build(quadTree);
@@ -151,9 +150,13 @@ namespace AltSrc.ProceduralCity.Generation
 
         protected void GenerateBuildings()
         {
-            // TODO: generate building rects
+            // TODO: generate lot rects
 
-            // TODO: add building rects to model
+            // TODO: add lot rects to model
+
+            // TODO: zone lots according to rules
+
+            // TODO: generate building models on zoned lots
 
             throw new NotImplementedException();
         }
@@ -175,7 +178,7 @@ namespace AltSrc.ProceduralCity.Generation
 
             List<RoadSegment> matches = quadTree.Retrieve(segment);
 
-            Debug.LogWarning(segment.ToString() + " has " + matches.Count);
+            //Debug.LogWarning(segment.ToString() + " has " + matches.Count);
 
             foreach (RoadSegment match in matches)
             {
