@@ -17,42 +17,46 @@ namespace AltSrc.ProceduralCity.Generation
 
         protected CityModel model;
 
-        [Inject]
-        public void Initialize(CityModel model)
-        {
-            this.model = model;
-        }
-
         public void Generate()
         {
             Debug.Log("CityGenerator.Generate");
 
-            // pass rules data to model
-            this.model.CityName = this.rules.CityName;
+            // construct model and pass rules data
+            model = new CityModel();
+            model.CityName = rules.CityName;
+            model.CityBounds = rules.CityBounds;
 
             // retrieve population heat map from rules (or if it is not provided, generate one)
             // and pass to model
-            this.model.PopulationHeatMap = GeneratePopulationHeatMap(this.rules);
+            model.PopulationHeatMap = 
+                rules.PopulationHeatMap != null ? 
+                rules.PopulationHeatMap 
+                : GeneratePopulationHeatMap(rules);
+
+            // the quadtree is used by local contraints function to quickly find nearby segments 
+            QuadTree<RoadSegment> quadTree = new QuadTree<RoadSegment>(
+                0,
+                rules.CityBounds,
+                rules.QuadTreeMaxObjectsPerNode,
+                rules.QuadTreeMaxDepth);
 
             // generate road segments and pass to model
-            this.model.RoadSegments = GenerateRoads(this.rules, this.model.PopulationHeatMap);
+            model.RoadSegments = GenerateRoads(rules, model.PopulationHeatMap, quadTree);
 
+            // generate buildings and pass to model
             // TODO: Implement. -Casper 2017-09-14
             //GenerateBuildings();
 
-            // TODO: Implement. -Casper 2017-09-14
-            //BuildView();
+            // build a view for the city
+            CityView view = new CityView(model);
+            view.Build();
 
-            BuildDebugView(this.rules, this.model);
+            // build a view for the quadtree
+            QuadTreeView.Build(quadTree);
         }
 
         protected Texture2D GeneratePopulationHeatMap(CityGeneratorRules rules)
         {
-            if (rules.PopulationHeatMap != null)
-            {
-                return rules.PopulationHeatMap;
-            }
-
             int width = MathUtils.RoundUpToNextPow2((int)(rules.CityBounds.width / 100));
             int height = MathUtils.RoundUpToNextPow2((int)(rules.CityBounds.height / 100));
             int resolution = Mathf.Max(width, height);
@@ -62,12 +66,11 @@ namespace AltSrc.ProceduralCity.Generation
             Noise.SeedHashFunction();
 
             Texture2D result = TextureCreator.Create(resolution);
-
             return result;
         }
 
         // TODO: Consider extracting road generation algorithm to a class. -Casper 2017-09-15
-        protected List<RoadSegment> GenerateRoads(CityGeneratorRules rules, Texture2D populationHeatMap)
+        protected List<RoadSegment> GenerateRoads(CityGeneratorRules rules, Texture2D populationHeatMap, QuadTree<RoadSegment> quadTree)
         {
             // create priority queue
             List<RoadSegment> priorityQueue = new List<RoadSegment>();
@@ -77,13 +80,17 @@ namespace AltSrc.ProceduralCity.Generation
             var rootSegment1 = new RoadSegment(
                 new Vector2(0f, 0f),
                 new Vector2(length, 0f),
-                0,
-                RoadType.Highway);
+                rules.DefaultRoadWidths[RoadType.Highway],
+                rules.DefaultRoadYOffset[RoadType.Highway],
+                RoadType.Highway,
+                0);
             var rootSegment2 = new RoadSegment(
                 new Vector2(0f, 0f),
                 new Vector2(-length, 0f),
-                0,
-                RoadType.Highway);
+                rules.DefaultRoadWidths[RoadType.Highway],
+                rules.DefaultRoadYOffset[RoadType.Highway],
+                RoadType.Highway,
+                0);
 
             // link root segments to each other
             rootSegment1.LinksBackward.Add(rootSegment2);
@@ -95,13 +102,6 @@ namespace AltSrc.ProceduralCity.Generation
 
             // list tracks segments that are generated and have passed local constraints function
             List<RoadSegment> generatedSegments = new List<RoadSegment>();
-
-            // quadtree is used by local contraints function to quickly find nearby segments 
-            QuadTree<RoadSegment> quadTree = new QuadTree<RoadSegment>(
-                0,
-                rules.CityBounds,
-                rules.QuadTreeMaxObjectsPerNode,
-                rules.QuadTreeMaxDepth);
 
             // loop through priority queue until we hit a limit
             while (priorityQueue.Count > 0
@@ -146,9 +146,6 @@ namespace AltSrc.ProceduralCity.Generation
             }
 
             Debug.Log(generatedSegments.Count + " segments generated.");
-
-            QuadTreeView.Build(quadTree);
-
             return generatedSegments;
         }
 
@@ -159,71 +156,6 @@ namespace AltSrc.ProceduralCity.Generation
             // TODO: add building rects to model
 
             throw new NotImplementedException();
-        }
-
-        protected void BuildView()
-        {
-            // TODO: hookup view with model
-
-            // TODO: generate view objects
-
-            throw new NotImplementedException();
-        }
-
-        protected void BuildDebugView(CityGeneratorRules rules, CityModel model)
-        {
-            GameObject debugView = new GameObject("DebugView");
-
-            // build population heatmap quad
-            GameObject heatMapQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            heatMapQuad.transform.localScale = new Vector3(rules.CityBounds.width, rules.CityBounds.height, 1f);
-            heatMapQuad.transform.eulerAngles = new Vector3(90f, 0f, -180f);
-            heatMapQuad.GetComponent<Renderer>().material = new Material(Shader.Find("Unlit/Texture"));
-            heatMapQuad.GetComponent<Renderer>().material.mainTexture = model.PopulationHeatMap;
-            heatMapQuad.transform.parent = debugView.transform;
-
-            // build road segments
-            Material highwayMaterial = new Material(Shader.Find("Unlit/Color"));
-            highwayMaterial.color = Color.red;
-            Material normalMaterial = new Material(Shader.Find("Unlit/Color"));
-            normalMaterial.color = Color.blue;
-
-            foreach (RoadSegment segment in model.RoadSegments)
-            {
-                float roadYOffset = rules.DefaultRoadYOffset[segment.RoadType];
-
-                // TODO: Build road segment manually from vertices to reduce the weird scaling effects on the markers. -Casper -2018-01-31
-                // build road segment
-                GameObject segmentQuad = GameObject.CreatePrimitive(PrimitiveType.Quad);
-                segmentQuad.name = segment.ToString();
-                var midPoint = segment.LineSegment2D.MidPoint;
-                segmentQuad.transform.position = midPoint.ToVec3XZ(roadYOffset);
-                segmentQuad.transform.localScale = new Vector3(segment.LineSegment2D.Length, rules.DefaultRoadWidths[segment.RoadType], 1f);
-                segmentQuad.transform.eulerAngles = new Vector3(90f, segment.LineSegment2D.DirectionInDegrees, 0f);
-                segmentQuad.transform.parent = debugView.transform;
-
-                if (segment.RoadType == RoadType.Highway)
-                {
-                    segmentQuad.GetComponent<Renderer>().material = highwayMaterial;
-                }
-                else if (segment.RoadType == RoadType.Normal)
-                {
-                    segmentQuad.GetComponent<Renderer>().material = normalMaterial;
-                }
-
-                // add markers for debugging
-                GameObject markerA = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                markerA.name = segment.PointA.ToString() + ", Pop: " 
-                    + GetPopulationAt(model.PopulationHeatMap, rules.CityBounds, segment.PointA).ToString();
-                markerA.transform.position = segment.PointA.ToVec3XZ(roadYOffset);
-                markerA.transform.parent = segmentQuad.transform;
-
-                GameObject markerB = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                markerB.name = segment.PointB.ToString() + ", Pop: "
-                    + GetPopulationAt(model.PopulationHeatMap, rules.CityBounds, segment.PointB).ToString();
-                markerB.transform.position = segment.PointB.ToVec3XZ(roadYOffset);
-                markerB.transform.parent = segmentQuad.transform;
-            }
         }
 
         protected bool CheckLocalConstraints(
@@ -406,17 +338,31 @@ namespace AltSrc.ProceduralCity.Generation
             if (!previousSegment.HasBeenSplit)
             {
                 // template function for generating new segments based on previous segment
-                Func<float, float, int, RoadType, RoadSegment> template = 
-                    (float angle, float length, int priority, RoadType roadType) => 
+                Func<float, float, float, float, RoadType, int, RoadSegment> template = 
+                    (float angle, float length, float width, float yOffset, RoadType roadType, int priority) => 
                     {
-                        return RoadSegment.UsingDirection(previousSegment.PointB, angle, length, priority, roadType, false);
+                        return RoadSegment.UsingDirection(
+                            previousSegment.PointB, 
+                            angle, 
+                            length, 
+                            width,
+                            yOffset,
+                            roadType, 
+                            priority, 
+                            false);
                     };
 
                 // template function for highways or going straight on a normal branch
                 Func<float, RoadSegment> templateContinue =
                     (float angle) => 
                     {
-                        return template(angle, previousSegment.LineSegment2D.Length, 0, previousSegment.RoadType);
+                        return template(
+                            angle, 
+                            previousSegment.LineSegment2D.Length, 
+                            previousSegment.RoadWidth,
+                            previousSegment.RoadYOffset,
+                            previousSegment.RoadType,
+                            0);
                     };
 
                 // template function for branching roads - highway branches have a lower priority (higher value)
@@ -428,13 +374,19 @@ namespace AltSrc.ProceduralCity.Generation
                             rules.HighwayBranchPriority 
                             : 0;
 
-                        return template(angle, rules.DefaultRoadLengths[RoadType.Normal], priority, RoadType.Normal);
+                        return template(
+                            angle, 
+                            rules.DefaultRoadLengths[RoadType.Normal], 
+                            rules.DefaultRoadWidths[RoadType.Normal], 
+                            rules.DefaultRoadYOffset[RoadType.Normal], 
+                            RoadType.Normal,
+                            priority);
                     };
 
                 // basic continuing road
                 RoadSegment continueStraight = templateContinue(previousSegment.LineSegment2D.DirectionInDegrees);
 
-                float continueStraightPopulation = CalculatePopulationForRoad(populationHeatMap, rules.CityBounds, continueStraight);
+                float continueStraightPopulation = model.CalculatePopulationForRoad(continueStraight);
 
                 // highway logic is more complex, can veer off by an angle and generate branches in 
                 // high population areas
@@ -446,7 +398,7 @@ namespace AltSrc.ProceduralCity.Generation
                     RoadSegment randomStraight = templateContinue(
                         previousSegment.LineSegment2D.DirectionInDegrees + randomStraightAngle);
 
-                    float randomStraightPopulation = CalculatePopulationForRoad(populationHeatMap, rules.CityBounds, randomStraight);
+                    float randomStraightPopulation = model.CalculatePopulationForRoad(randomStraight);
 
                     // choose between continuing straight and veering off by a random amount, based on
                     // which road has access to more of the population
@@ -529,25 +481,6 @@ namespace AltSrc.ProceduralCity.Generation
             }
 
             return newSegments;
-        }
-
-        protected float CalculatePopulationForRoad(Texture2D heatMap, Rect cityBounds, RoadSegment segment)
-        {
-            return (GetPopulationAt(heatMap, cityBounds, segment.PointA) + GetPopulationAt(heatMap, cityBounds, segment.PointB)) / 2f;
-        }
-
-        protected float GetPopulationAt(Texture2D heatMap, Rect cityBounds, Vector2 position)
-        {
-            if (cityBounds.Contains(position))
-            {
-                Vector2 texturePosition = new Vector2(
-                    (position.x / cityBounds.width) * heatMap.width,
-                    (position.y / cityBounds.height) * heatMap.height);
-
-                return heatMap.GetPixel((int)texturePosition.x, (int)texturePosition.y).r;
-            }
-
-            return 0f;
         }
 
         protected float GetRandomStraightAngle(CityGeneratorRules rules)

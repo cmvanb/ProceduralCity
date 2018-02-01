@@ -7,7 +7,6 @@ namespace AltSrc.ProceduralCity.Generation
     {
         public override void InstallBindings()
         {
-            Container.Bind<CityModel>().AsTransient();
         }
     }
 }

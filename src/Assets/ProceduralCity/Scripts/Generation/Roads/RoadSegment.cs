@@ -8,32 +8,38 @@ namespace AltSrc.ProceduralCity.Generation.Roads
     public class RoadSegment : IBounds
     {
         public LineSegment2D LineSegment2D { get; set; }
+        public Vector2 PointA { get { return this.LineSegment2D.PointA; } }
+        public Vector2 PointB { get { return this.LineSegment2D.PointB; } }
+        public Rect Bounds { get { return this.LineSegment2D.Bounds; } }
+        public float RoadWidth { get; private set; }
+        public float RoadYOffset { get; private set; }
+        public RoadType RoadType { get; private set; }
+
         // TODO: Consider refactoring this variable out into CityGenerator. -Casper 2017-08-31
         /// <summary>
         ///   The closer Priority is to 0, the sooner this segment will be popped out of the queue
         ///   and used in CityGenerator.cs.
         /// </summary>
         public int Priority { get; set; }
-        public RoadType RoadType { get; private set; }
         public bool HasBeenSplit { get; set; }
+
         public List<RoadSegment> LinksForward { get; set; }
         public List<RoadSegment> LinksBackward { get; set; }
-
-        public Vector2 PointA { get { return this.LineSegment2D.PointA; } }
-        public Vector2 PointB { get { return this.LineSegment2D.PointB; } }
-        public Rect Bounds { get { return this.LineSegment2D.Bounds; } }
-
 
         public RoadSegment(
             Vector2 pointA,
             Vector2 pointB,
+            float roadWidth,
+            float roadYOffset,
+            RoadType roadType,
             int priority,
-            RoadType roadType = RoadType.Normal,
             bool hasBeenSplit = false)
         {
             this.LineSegment2D = new LineSegment2D(pointA, pointB);
-            this.Priority = priority;
+            this.RoadWidth = roadWidth;
+            this.RoadYOffset = roadYOffset;
             this.RoadType = roadType;
+            this.Priority = priority;
             this.HasBeenSplit = hasBeenSplit;
             this.LinksForward = new List<RoadSegment>();
             this.LinksBackward = new List<RoadSegment>();
@@ -159,8 +165,10 @@ namespace AltSrc.ProceduralCity.Generation.Roads
             return new RoadSegment(
                 existingSegment.PointA,
                 existingSegment.PointB,
-                existingSegment.Priority,
+                existingSegment.RoadWidth,
+                existingSegment.RoadYOffset,
                 existingSegment.RoadType,
+                existingSegment.Priority,
                 existingSegment.HasBeenSplit);
         }
 
@@ -169,6 +177,8 @@ namespace AltSrc.ProceduralCity.Generation.Roads
         ///       @param pointA - the first point in the new road segment
         ///       @param angle - the direction in degrees
         ///       @param length - the length of the new road segment
+        ///       @param width - the width of the new road segment
+        ///       @param yOffset - the y offset of the new road segment
         ///       @param priority - the priority of the road segment in CityGenerator.cs
         ///       @param roadType - determines how this road will be rendered
         /// </summary>
@@ -176,8 +186,10 @@ namespace AltSrc.ProceduralCity.Generation.Roads
             Vector2 pointA,
             float angle,
             float length,
-            int priority,
+            float width,
+            float yOffset,
             RoadType roadType,
+            int priority,
             bool hasBeenSplit)
         {
             Vector2 pointB = pointA + Vector2Utils.FromAngleInDegreesAndMagnitude(angle, length);
@@ -185,8 +197,10 @@ namespace AltSrc.ProceduralCity.Generation.Roads
             return new RoadSegment(
                 pointA,
                 pointB,
-                priority,
+                width,
+                yOffset,
                 roadType,
+                priority,
                 hasBeenSplit);
         }
     }
