@@ -10,6 +10,8 @@ namespace AltSrc.ProceduralCity.Generation
     {
         public CityModel Model { get; set; }
 
+        public Dictionary<RoadSegment, RoadSegmentView> RoadSegmentViews = new Dictionary<RoadSegment, RoadSegmentView>();
+
         public static CityView Build(CityModel model)
         {
             GameObject viewObject = new GameObject("CityView");
@@ -30,6 +32,8 @@ namespace AltSrc.ProceduralCity.Generation
             {
                 RoadSegmentView segmentView = RoadSegmentView.Build(segment, model);
                 segmentView.transform.parent = viewObject.transform;
+
+                view.RoadSegmentViews[segment] = segmentView;
             }
 
             return view;

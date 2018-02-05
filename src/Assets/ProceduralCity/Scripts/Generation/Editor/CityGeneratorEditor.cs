@@ -12,8 +12,6 @@ namespace AltSrc.ProceduralCity.Generation
         public void OnEnable()
         {
             this.container = new DiContainer();
-
-            CityGeneratorInstaller.Install(container);
         }
 
         public override void OnInspectorGUI()

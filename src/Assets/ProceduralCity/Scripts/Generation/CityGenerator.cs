@@ -7,6 +7,7 @@ using Zenject;
 using AltSrc.UnityCommon.DataStructures;
 using AltSrc.UnityCommon.Math;
 using AltSrc.ProceduralCity.Generation.Roads;
+using AltSrc.UnityCommon.Debugging;
 
 namespace AltSrc.ProceduralCity.Generation
 {
@@ -15,43 +16,47 @@ namespace AltSrc.ProceduralCity.Generation
         [SerializeField]
         protected CityGeneratorRules rules;
 
-        protected CityModel model;
+        public CityModel CityModel { get { return cityModel; } }
+        protected CityModel cityModel;
+
+        public CityView CityView { get { return cityView; } }
+        protected CityView cityView;
 
         public void Generate()
         {
             Debug.Log("CityGenerator.Generate");
 
             // construct model and pass rules data
-            model = new CityModel();
-            model.CityName = rules.CityName;
-            model.CityBounds = rules.CityBounds;
+            cityModel = new CityModel();
+            cityModel.CityName = rules.CityName;
+            cityModel.CityBounds = rules.CityBounds;
 
             // retrieve population heat map from rules (or if it is not provided, generate one)
             // and pass to model
-            model.PopulationHeatMap = 
+            cityModel.PopulationHeatMap = 
                 rules.PopulationHeatMap != null ? 
                 rules.PopulationHeatMap 
                 : GeneratePopulationHeatMap(rules);
 
             // the quadtree is used by local contraints function to quickly find nearby segments 
-            QuadTree<RoadSegment> quadTree = new QuadTree<RoadSegment>(
+            cityModel.QuadTree = new QuadTree<RoadSegment>(
                 0,
                 rules.CityBounds,
                 rules.QuadTreeMaxObjectsPerNode,
                 rules.QuadTreeMaxDepth);
 
             // generate road segments and pass to model
-            model.RoadSegments = GenerateRoads(rules, model.PopulationHeatMap, quadTree);
+            cityModel.RoadSegments = GenerateRoads(rules, cityModel.PopulationHeatMap, cityModel.QuadTree);
 
             // generate buildings and pass to model
             // TODO: Implement. -Casper 2017-09-14
             //GenerateBuildings();
 
             // build a view for the city
-            CityView.Build(model);
+            cityView = CityView.Build(cityModel);
 
             // build a view for the quadtree
-            QuadTreeView.Build(quadTree);
+            QuadTreeView.Build(cityModel.QuadTree);
         }
 
         protected Texture2D GeneratePopulationHeatMap(CityGeneratorRules rules)
@@ -176,7 +181,7 @@ namespace AltSrc.ProceduralCity.Generation
                 return false;
             }
 
-            List<RoadSegment> matches = quadTree.Retrieve(segment);
+            List<RoadSegment> matches = quadTree.Retrieve(segment.Bounds);
 
             //Debug.LogWarning(segment.ToString() + " has " + matches.Count);
 
@@ -389,7 +394,7 @@ namespace AltSrc.ProceduralCity.Generation
                 // basic continuing road
                 RoadSegment continueStraight = templateContinue(previousSegment.LineSegment2D.DirectionInDegrees);
 
-                float continueStraightPopulation = model.CalculatePopulationForRoad(continueStraight);
+                float continueStraightPopulation = cityModel.CalculatePopulationForRoad(continueStraight);
 
                 // highway logic is more complex, can veer off by an angle and generate branches in 
                 // high population areas
@@ -401,7 +406,7 @@ namespace AltSrc.ProceduralCity.Generation
                     RoadSegment randomStraight = templateContinue(
                         previousSegment.LineSegment2D.DirectionInDegrees + randomStraightAngle);
 
-                    float randomStraightPopulation = model.CalculatePopulationForRoad(randomStraight);
+                    float randomStraightPopulation = cityModel.CalculatePopulationForRoad(randomStraight);
 
                     // choose between continuing straight and veering off by a random amount, based on
                     // which road has access to more of the population

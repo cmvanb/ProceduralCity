@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using AltSrc.UnityCommon.Math;
 
-namespace AltSrc.ProceduralCity.Generation
+namespace AltSrc.ProceduralCity.Example01
 {
     public class CameraController : MonoBehaviour
     {

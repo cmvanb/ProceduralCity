@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using AltSrc.UnityCommon.DataStructures;
 using AltSrc.ProceduralCity.Generation.Roads;
 
 namespace AltSrc.ProceduralCity.Generation
@@ -10,6 +11,7 @@ namespace AltSrc.ProceduralCity.Generation
         public Rect CityBounds { get; set; }
         public Texture2D PopulationHeatMap { get; set; }
         public List<RoadSegment> RoadSegments { get; set; }
+        public QuadTree<RoadSegment> QuadTree { get; set; }
 
         public CityModel()
         {

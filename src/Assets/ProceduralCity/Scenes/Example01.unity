@@ -173,6 +173,12 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!114 &281160045 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 114213050645925584, guid: 2b12740cd7e207249afa1396ff44f1a0,
+    type: 2}
+  m_PrefabInternal: {fileID: 735459629}
+  m_Script: {fileID: 11500000, guid: 62145f1d77ae14c429bbb15d8ab27ae6, type: 3}
 --- !u!1 &469447505
 GameObject:
   m_ObjectHideFlags: 0
@@ -182,10 +188,9 @@ GameObject:
   m_Component:
   - component: {fileID: 469447510}
   - component: {fileID: 469447509}
-  - component: {fileID: 469447508}
-  - component: {fileID: 469447507}
   - component: {fileID: 469447506}
   - component: {fileID: 469447511}
+  - component: {fileID: 469447507}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -200,20 +205,17 @@ AudioListener:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 469447505}
   m_Enabled: 1
---- !u!124 &469447507
-Behaviour:
+--- !u!114 &469447507
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 469447505}
   m_Enabled: 1
---- !u!92 &469447508
-Behaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 469447505}
-  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b219f7b06f5aac2468654c8015e58b4c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!20 &469447509
 Camera:
   m_ObjectHideFlags: 0
@@ -316,6 +318,11 @@ Prefab:
       propertyPath: m_RootOrder
       value: 4
       objectReference: {fileID: 0}
+    - target: {fileID: 114213050645925584, guid: 2b12740cd7e207249afa1396ff44f1a0,
+        type: 2}
+      propertyPath: sceneContext
+      value: 
+      objectReference: {fileID: 1131886180}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 2b12740cd7e207249afa1396ff44f1a0, type: 2}
   m_IsPrefabParent: 0
@@ -376,9 +383,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1131886179}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d1b5346c57906964dbdb0c94f07aa13f, type: 3}
+  m_Script: {fileID: 11500000, guid: 0cb9e902d7c57e740947594bd64e9704, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  cityGenerator: {fileID: 281160045}
 --- !u!1 &1736057777
 GameObject:
   m_ObjectHideFlags: 0
